@@ -72,13 +72,17 @@ public:
     static Tensor<dtype> rand(const std::vector<int>& shape);
 
     T get(const std::vector<int>& indices) const;
-    Tensor<dtype> get_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices) const;
+    Tensor<dtype> get_slice(const std::vector<int>& start_indices,
+        const std::vector<int>& end_indices, int traversal_strategy = 1, const std::vector<int>& stride = {}) const;
     void set(const std::vector<int>& indices, const T& value);
     void set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const Tensor<dtype>& values);
     template<DType dt>
     friend std::ostream& operator<<(std::ostream& os, const Tensor<dt>& tensor);
 
-    void operator+(const Tensor& other);
+    Tensor<dtype> operator+(const Tensor<dtype>& other)const;
+    Tensor<dtype> operator-(const Tensor<dtype>& other)const;
+    Tensor<dtype> operator*(const Tensor<dtype>& other)const; 
+
     T* data() const { return data_; } 
 
     std::vector<int> shape;
@@ -91,4 +95,7 @@ private:
 
     void allocate_and_initialize(const std::vector<int>& shape, bool zero_initialize, bool is_rand);
 };
+//defining it outside the class
+template<DType dtype>
+Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
 #endif

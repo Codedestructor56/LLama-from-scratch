@@ -5,6 +5,7 @@
 #include <cstring>
 #include <typeinfo>
 #include <cxxabi.h>
+#include <iomanip> 
 
 size_t get_dtype_size(DType dtype) {
     switch(dtype) {
@@ -103,7 +104,7 @@ typename Tensor<dtype>::T Tensor<dtype>::get(const std::vector<int>& indices) co
     }
     int flat_index = 0;
     int multiplier = 1;
-    for (int i = this->shape.size() - 1; i >= 0; --i) {
+    for (int i = this->shape.size() - 1; i >= 0; --i) { 
         if(indices[i]>this->shape[i]-1){
           throw std::runtime_error("Index out of range");
         }
@@ -138,6 +139,106 @@ void Tensor<dtype>::set(const std::vector<int>& indices, const typename Tensor<d
 }
 
 template<DType dtype>
+Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, int traversal_strategy, const std::vector<int>& stride) const{
+if (start_indices.size() != shape.size() || end_indices.size() != shape.size()) {
+        throw std::runtime_error("start_indices and end_indices must have the same size as the tensor's shape");
+    }
+
+    // Calculate the resulting shape of the slice
+    std::vector<int> result_shape(shape.size());
+    for (size_t i = 0; i < shape.size(); ++i) {
+        int end = (end_indices[i] == -1) ? shape[i] : end_indices[i];
+        result_shape[i] = (end - start_indices[i]) / (stride.size() > i ? stride[i] : 1);
+        if (result_shape[i] <= 0) {
+            throw std::runtime_error("Invalid slice indices or stride for dimension " + std::to_string(i));
+        }
+    }
+
+    // Allocate memory for the result tensor
+    std::vector<T> result_data(std::accumulate(result_shape.begin(), result_shape.end(), 1, std::multiplies<int>()));
+    Tensor<dtype> result(result_data, result_shape);
+
+    // Helper function to calculate flat index from multidimensional indices
+    auto flat_index = [this](const std::vector<int>& indices) {
+        int index = 0;
+        for (size_t i = 0; i < indices.size(); ++i) {
+            index = index * shape[i] + indices[i];
+        }
+        return index;
+    };
+
+    // Traverse and copy data based on the traversal strategy and stride
+    std::vector<int> indices(shape.size(), 0);
+    auto traverse = [&](auto& self, size_t dim) -> void {
+        if (dim == shape.size()) {
+            if (traversal_strategy == -1) {
+                result.data_[flat_index(indices)] = data_[flat_index(indices)];
+            } else {
+                result.data_[flat_index(indices)] = data_[flat_index(indices)];
+            }
+            return;
+        }
+
+        int start = start_indices[dim];
+        int end = (end_indices[dim] == -1) ? shape[dim] : end_indices[dim];
+        int step = (stride.size() > dim) ? stride[dim] : 1;
+
+        if (traversal_strategy == -1) {
+            for (int i = end - 1; i >= start; i -= step) {
+                indices[dim] = i;
+                self(self, dim + 1);
+            }
+        } else {
+            for (int i = start; i < end; i += step) {
+                indices[dim] = i;
+                self(self, dim + 1);
+            }
+        }
+    };
+
+    traverse(traverse, 0);
+
+    return result;
+}
+
+template<DType dtype>
+void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {
+    if (depth == shape.size() - 1) {
+        os << "[";
+        for (int i = 0; i < shape[depth]; ++i) {
+            std::vector<int> new_indices = indices;
+            new_indices.push_back(i);
+            int flat_index = 0;
+            int multiplier = 1;
+            for (int j = shape.size() - 1; j >= 0; --j) {
+                flat_index += new_indices[j] * multiplier;
+                multiplier *= shape[j];
+            }
+            if (dtype == DType::UINT8 || dtype == DType::INT8) {
+                os << static_cast<int>(data[flat_index]);
+            } else {
+                os << data[flat_index];
+            }
+            if (i < shape[depth] - 1) {
+                os << ", ";
+            }
+        }
+        os << "]";
+    } else {
+        os << "[";
+        for (int i = 0; i < shape[depth]; ++i) {
+            std::vector<int> new_indices = indices;
+            new_indices.push_back(i);
+            print_tensor_data<dtype>(os, shape, new_indices, data, depth + 1);
+            if (i < shape[depth] - 1) {
+                os << ", ";
+            }
+        }
+        os << "]";
+    }
+}
+
+template<DType dtype>
 std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
     os << "Tensor of type " << tensor.type << " with shape [";
     for (size_t i = 0; i < tensor.shape.size(); ++i) {
@@ -146,22 +247,11 @@ std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
             os << ", ";
         }
     }
-    os << "] and data: [";
-    int product = std::accumulate(tensor.shape.begin(), tensor.shape.end(), 1, std::multiplies<int>());
-    for (size_t i = 0; i < product; ++i) {
-        if (tensor.type == DType::UINT8 || tensor.type == DType::INT8){ 
-          os << static_cast<int>(tensor.data()[i]);
-        }
-        else{
-          os <<tensor.data()[i];
-        }
-        if (i < product - 1) {
-            os << ", ";
-        }
-    }
-    os << "]";
+    os << "] and data: ";
+    print_tensor_data<dtype>(os, tensor.shape, {}, tensor.data(), 0);
     return os;
 }
+
 
 // Explicit template instantiation
 template class Tensor<FLOAT16>;
