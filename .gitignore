@@ -1,0 +1,8 @@
+CMakeCache.txt
+CMakeFiles/
+CPackConfig.cmake
+CPackSourceConfig.cmake
+cmake_install.cmake
+Makefile
+env/
+wikitext-103-v1.zip
