@@ -192,6 +192,52 @@ Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, co
 }
 
 template<DType dtype>
+void Tensor<dtype>::set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const std::vector<T>& values) { 
+    if (start_indices.size() != end_indices.size() || start_indices.size() != this->shape.size()) {
+        throw std::invalid_argument("Dimension mismatch between start indices, end indices, and tensor shape.");
+    }
+
+    int slice_size = 1;
+    for (size_t i = 0; i < start_indices.size(); ++i) {
+        int end = (end_indices[i] == -1) ? shape[i] : end_indices[i];
+        int slice_dim_size = end - start_indices[i];
+
+        if (slice_dim_size <= 0) {
+            throw std::invalid_argument("End indices must be greater than start indices.");
+        }
+        slice_size *= slice_dim_size;
+    }
+
+    if (slice_size != values.size()) {
+        throw std::runtime_error("Number of elements in the values vector does not match the number of elements in the slice.");
+    }
+
+    auto compute_linear_index = [this](const std::vector<int>& indices) -> int {
+        int linear_index = 0;
+        int stride = 1;
+        for (int i = this->shape.size() - 1; i >= 0; --i) {
+            linear_index += indices[i] * stride;
+            stride *= this->shape[i];
+        }
+        return linear_index;
+    };
+ 
+    std::vector<int> current_indices = start_indices;
+    for (size_t i = 0; i < values.size(); ++i) {
+        int linear_index = compute_linear_index(current_indices);
+        this->data_[linear_index] = values[i];
+ 
+        for (int j = current_indices.size() - 1; j >= 0; --j) {
+            current_indices[j]++;
+            if (current_indices[j] < end_indices[j]) {
+                break;
+            }
+            current_indices[j] = start_indices[j];
+        }
+    }
+}
+
+template<DType dtype>
 void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {
     if (depth == shape.size() - 1) {
         os << "[";

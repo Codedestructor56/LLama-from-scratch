@@ -15,9 +15,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 list(REMOVE_ITEM SOURCES ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
-# Collect all test source files in the src/tests directory
-file(GLOB TEST_SOURCES ${CMAKE_SOURCE_DIR}/tests/*.cpp)
-
 # Add subdirectory for external dependencies
 add_subdirectory(external/sentencepiece)
 
@@ -25,9 +22,6 @@ add_subdirectory(external/sentencepiece)
 add_executable(llamascratch ${SOURCES} ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(llamascratch sentencepiece)
 
-# Create an executable for each test source file
-foreach(TEST_SOURCE ${TEST_SOURCES})
-    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
-    add_executable(${TEST_NAME} ${TEST_SOURCE} ${SOURCES})
-    target_link_libraries(${TEST_NAME} sentencepiece)
-endforeach()
+# Define the test executable
+add_executable(test_entry_point ${CMAKE_SOURCE_DIR}/tests/entry_point.cpp ${SOURCES})
+target_link_libraries(test_entry_point sentencepiece)

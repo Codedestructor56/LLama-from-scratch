@@ -1,8 +1,10 @@
+#pragma once
+
 #include <iostream>
 #include "tensor.h"
 
-void print_tensor(const Tensor<UINT8>& tensor) {
 
+void print_tensor(const Tensor<UINT8>& tensor) {
     std::cout << tensor << std::endl;
 }
 
@@ -101,7 +103,3 @@ void test_get_slice() {
     }
 }
 
-int main() {
-    test_get_slice();
-    return 0;
-}

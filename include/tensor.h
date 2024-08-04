@@ -100,7 +100,7 @@ public:
     Tensor<dtype> get_slice(const std::vector<int>& start_indices,
         const std::vector<int>& end_indices, const std::vector<int>& stride = {}) const;
     void set(const std::vector<int>& indices, const T& value);
-    void set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const Tensor<dtype>& values);
+    void set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const std::vector<T>& values);
     template<DType dt>
     friend std::ostream& operator<<(std::ostream& os, const Tensor<dt>& tensor);
 
