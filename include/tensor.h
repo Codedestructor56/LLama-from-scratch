@@ -120,7 +120,18 @@ private:
 
     void allocate_and_initialize(const std::vector<int>& shape, bool zero_initialize, bool is_rand);
 };
+
+
 //defining it outside the class
 template<DType dtype>
 Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
+
+// Explicit template instantiation
+template class Tensor<FLOAT16>;
+template class Tensor<FLOAT32>;
+template class Tensor<INT8>;
+template class Tensor<INT32>;
+template class Tensor<UINT8>;
+template class Tensor<UINT32>;
+
 #endif

@@ -147,17 +147,48 @@ Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, co
     for (size_t i = 0; i < shape.size(); ++i) {
         int end = (end_indices[i] == -1) ? shape[i] : end_indices[i];
         result_shape[i] = (end - start_indices[i]) / (stride.size() > i ? stride[i] : 1);
-        if (result_shape[i] <= 0) {
+        if(end>shape[i]){
+          throw std::runtime_error("Index out of bounds");
+        }
+        if (result_shape[i] < 0) {
             throw std::runtime_error("Invalid slice indices or stride for dimension " + std::to_string(i));
         }
     }
-    for(auto elem:result_shape){
-      std::cout<<elem<<" "<<std::endl;
+    size_t num_elements = std::accumulate(result_shape.begin(), result_shape.end(), 1, std::multiplies<int>());
+    std::vector<T> result_data(num_elements);
+    auto get_flat_index = [&](const std::vector<int>& indices) -> size_t {
+        size_t flat_index = 0;
+        size_t stride = 1;
+        for (int i = shape.size() - 1; i >= 0; --i) {
+            flat_index += indices[i] * stride;
+            stride *= shape[i];
+        }
+        return flat_index;
+    };
+    std::vector<int> current_indices(shape.size(), 0);
+    std::vector<int> result_indices(shape.size(), 0);
+
+    auto increment_indices = [&](std::vector<int>& indices, const std::vector<int>& shape, const std::vector<int>& stride) -> bool {
+        for (int i = shape.size() - 1; i >= 0; --i) {
+            indices[i] += (stride.size() > i ? stride[i] : 1);
+            if (indices[i] < shape[i]) {
+                return true;
+            }
+            indices[i] = 0;
+        }
+        return false;
+    };
+    for (size_t i = 0; i < num_elements; ++i) {
+        for (size_t j = 0; j < shape.size(); ++j) {
+            current_indices[j] = start_indices[j] + result_indices[j] * (stride.size() > j ? stride[j] : 1);
+        }
+        result_data[i] = data_[get_flat_index(current_indices)];
+        if (!increment_indices(result_indices, result_shape, std::vector<int>(shape.size(), 1))) {
+            break;
+        }
     }
-    Tensor tensor;
-    tensor.allocate_and_initialize(shape, false, true);
-    
-    return tensor;
+
+    return Tensor<dtype>(result_data, result_shape);
 }
 
 template<DType dtype>
@@ -211,19 +242,10 @@ std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
     return os;
 }
 
-
-// Explicit template instantiation
-template class Tensor<FLOAT16>;
-template class Tensor<FLOAT32>;
-template class Tensor<INT8>;
-template class Tensor<INT32>;
-template class Tensor<UINT8>;
-template class Tensor<UINT32>;
-
-template std::ostream& operator<< <FLOAT16>(std::ostream& os, const Tensor<FLOAT16>& tensor);
-template std::ostream& operator<< <FLOAT32>(std::ostream& os, const Tensor<FLOAT32>& tensor);
-template std::ostream& operator<< <INT8>(std::ostream& os, const Tensor<INT8>& tensor);
-template std::ostream& operator<< <INT32>(std::ostream& os, const Tensor<INT32>& tensor);
-template std::ostream& operator<< <UINT8>(std::ostream& os, const Tensor<UINT8>& tensor);
-template std::ostream& operator<< <UINT32>(std::ostream& os, const Tensor<UINT32>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<FLOAT16>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<FLOAT32>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<INT8>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<INT32>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<UINT8>& tensor);
+template std::ostream& operator<<(std::ostream& os, const Tensor<UINT32>& tensor);
 
