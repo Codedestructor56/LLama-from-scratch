@@ -139,12 +139,10 @@ void Tensor<dtype>::set(const std::vector<int>& indices, const typename Tensor<d
 }
 
 template<DType dtype>
-Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, int traversal_strategy, const std::vector<int>& stride) const{
-if (start_indices.size() != shape.size() || end_indices.size() != shape.size()) {
+Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const std::vector<int>& stride) const{
+    if (start_indices.size() != shape.size() || end_indices.size() != shape.size()) {
         throw std::runtime_error("start_indices and end_indices must have the same size as the tensor's shape");
     }
-
-    // Calculate the resulting shape of the slice
     std::vector<int> result_shape(shape.size());
     for (size_t i = 0; i < shape.size(); ++i) {
         int end = (end_indices[i] == -1) ? shape[i] : end_indices[i];
@@ -153,52 +151,13 @@ if (start_indices.size() != shape.size() || end_indices.size() != shape.size()) 
             throw std::runtime_error("Invalid slice indices or stride for dimension " + std::to_string(i));
         }
     }
-
-    // Allocate memory for the result tensor
-    std::vector<T> result_data(std::accumulate(result_shape.begin(), result_shape.end(), 1, std::multiplies<int>()));
-    Tensor<dtype> result(result_data, result_shape);
-
-    // Helper function to calculate flat index from multidimensional indices
-    auto flat_index = [this](const std::vector<int>& indices) {
-        int index = 0;
-        for (size_t i = 0; i < indices.size(); ++i) {
-            index = index * shape[i] + indices[i];
-        }
-        return index;
-    };
-
-    // Traverse and copy data based on the traversal strategy and stride
-    std::vector<int> indices(shape.size(), 0);
-    auto traverse = [&](auto& self, size_t dim) -> void {
-        if (dim == shape.size()) {
-            if (traversal_strategy == -1) {
-                result.data_[flat_index(indices)] = data_[flat_index(indices)];
-            } else {
-                result.data_[flat_index(indices)] = data_[flat_index(indices)];
-            }
-            return;
-        }
-
-        int start = start_indices[dim];
-        int end = (end_indices[dim] == -1) ? shape[dim] : end_indices[dim];
-        int step = (stride.size() > dim) ? stride[dim] : 1;
-
-        if (traversal_strategy == -1) {
-            for (int i = end - 1; i >= start; i -= step) {
-                indices[dim] = i;
-                self(self, dim + 1);
-            }
-        } else {
-            for (int i = start; i < end; i += step) {
-                indices[dim] = i;
-                self(self, dim + 1);
-            }
-        }
-    };
-
-    traverse(traverse, 0);
-
-    return result;
+    for(auto elem:result_shape){
+      std::cout<<elem<<" "<<std::endl;
+    }
+    Tensor tensor;
+    tensor.allocate_and_initialize(shape, false, true);
+    
+    return tensor;
 }
 
 template<DType dtype>

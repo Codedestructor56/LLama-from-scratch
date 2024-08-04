@@ -61,9 +61,34 @@ public:
     Tensor() : data_(nullptr), type(dtype) {}
     Tensor(T* data, std::vector<int>& shape): type(dtype), data_(data), shape(shape){}
     Tensor(std::vector<T>& vec, std::vector<int>& shape): type(dtype), shape(shape){
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        if(num_elems!=vec.size()){
+          throw std::runtime_error("Shape does not match the number of elements in vector");
+        }
         data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
         for (size_t i = 0; i < vec.size(); ++i) {
             data_[i] = vec[i];
+        }
+    }
+    Tensor(const std::vector<int>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        if(num_elems!=vec.size()){
+          throw std::runtime_error("Shape does not match the number of elements in vector");
+        }
+        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
+        for (size_t i = 0; i < vec.size(); ++i) {
+            data_[i] = static_cast<T>(vec[i]);
+        }
+    }
+
+    Tensor(const std::vector<float>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        if(num_elems!=vec.size()){
+          throw std::runtime_error("Shape does not match the number of elements in vector");
+        }
+        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
+        for (size_t i = 0; i < vec.size(); ++i) {
+            data_[i] = static_cast<T>(vec[i]);
         }
     }
 
@@ -73,7 +98,7 @@ public:
 
     T get(const std::vector<int>& indices) const;
     Tensor<dtype> get_slice(const std::vector<int>& start_indices,
-        const std::vector<int>& end_indices, int traversal_strategy = 1, const std::vector<int>& stride = {}) const;
+        const std::vector<int>& end_indices, const std::vector<int>& stride = {}) const;
     void set(const std::vector<int>& indices, const T& value);
     void set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const Tensor<dtype>& values);
     template<DType dt>
