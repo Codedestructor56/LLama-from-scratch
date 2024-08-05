@@ -134,14 +134,21 @@ public:
         return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
     }
 
+    
     template <DType new_dtype>
-    std::shared_ptr <const Tensor<new_dtype>> change_dtype() const {
+    std::shared_ptr<const Tensor<new_dtype>> change_dtype() const {
         auto new_tensor = std::make_shared<Tensor<new_dtype>>(shape);
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+         
+        typename DTypeToType<new_dtype>::Type* new_data = new typename DTypeToType<new_dtype>::Type[num_elems];
+ 
         for (int i = 0; i < num_elems; ++i) {
-            new_tensor->data_[i] = static_cast<typename DTypeToType<new_dtype>::Type>(data_[i]);
+            new_data[i] = static_cast<typename DTypeToType<new_dtype>::Type>(data_[i]);
         }
-        new_tensor->set_children(this->children); 
+        
+        // Set the data in the new tensor
+        new_tensor->data_set(new_data);
+        new_tensor->set_children(this->children);
         return new_tensor;
     }
 
@@ -162,7 +169,7 @@ public:
     Tensor<dtype> operator*(const Tensor<dtype>& other) const; 
 
     T* data() const { return data_; } 
-
+    void data_set(const T* data) { data_ = const_cast<T*>(data);}
     std::vector<int> shape;
     DType type;
     std::shared_ptr<Tensor> grad;

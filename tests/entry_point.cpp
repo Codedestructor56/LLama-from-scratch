@@ -2,6 +2,8 @@
 #include "get_slice.h"
 #include "set_slice.h"
 #include "set_children.h"
+#include "change_dtype.h"
+
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -22,6 +24,10 @@ int main(int argc, char* argv[]) {
         case 3:
             std::cout << "Running set_chilren test..." << std::endl;
             test_set_children();
+            break;
+        case 4:
+            std::cout << "Running change_dtype test..." << std::endl;
+            test_change_dtype();
             break;
 
         default:
