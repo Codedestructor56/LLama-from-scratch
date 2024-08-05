@@ -145,8 +145,7 @@ public:
         for (int i = 0; i < num_elems; ++i) {
             new_data[i] = static_cast<typename DTypeToType<new_dtype>::Type>(data_[i]);
         }
-        
-        // Set the data in the new tensor
+
         new_tensor->data_set(new_data);
         new_tensor->set_children(this->children);
         return new_tensor;
@@ -164,9 +163,9 @@ public:
         this->children = children; 
     }
 
-    std::shared_ptr<Tensor<dtype>> operator+(const Tensor<dtype>& other) const;
-    Tensor<dtype> operator-(const Tensor<dtype>& other) const;
-    Tensor<dtype> operator*(const Tensor<dtype>& other) const; 
+    Tensor<dtype> operator+(const TensorVariant& other) const;
+    Tensor<dtype> operator-(const TensorVariant& other) const;
+    Tensor<dtype> operator*(const TensorVariant& other) const; 
 
     T* data() const { return data_; } 
     void data_set(const T* data) { data_ = const_cast<T*>(data);}

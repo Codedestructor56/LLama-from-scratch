@@ -19,6 +19,18 @@ size_t get_dtype_size(DType dtype) {
     }
 }
 
+std::string dtype_to_string(DType dtype) {
+    switch (dtype) {
+        case FLOAT16: return "FLOAT16";
+        case FLOAT32: return "FLOAT32";
+        case INT8: return "INT8";
+        case INT32: return "INT32";
+        case UINT8: return "UINT8";
+        case UINT32: return "UINT32";
+        default: return "Unknown DType";
+    }
+}
+
 template<typename T>
 std::string type_name() {
     int status;
@@ -237,6 +249,67 @@ void Tensor<dtype>::set_slice(const std::vector<int>& start_indices, const std::
     }
 }
 
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator+(const TensorVariant& other) const {
+    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
+        if (shape != (*other_tensor)->shape) {
+            throw std::runtime_error("Shapes do not match for tensor addition.");
+        }
+
+        Tensor<dtype> result(shape);
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+
+        for (int i = 0; i < num_elems; ++i) {
+            result.data()[i] = this->data()[i] + (*other_tensor)->data()[i];
+        }
+
+        result.set_children(children);
+        return result;
+    }
+    throw std::runtime_error("DType mismatch for tensor addition.");
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator-(const TensorVariant& other) const {
+    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
+        if (shape != (*other_tensor)->shape) {
+            throw std::runtime_error("Shapes do not match for tensor subtraction.");
+        }
+
+        Tensor<dtype> result(shape);
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+
+        for (int i = 0; i < num_elems; ++i) {
+            result.data()[i] = this->data()[i] - (*other_tensor)->data()[i];
+        }
+
+        result.set_children(children);
+        return result;
+    }
+    throw std::runtime_error("DType mismatch for tensor subtraction.");
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator*(const TensorVariant& other) const {
+    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
+        if (shape != (*other_tensor)->shape) {
+            throw std::runtime_error("Shapes do not match for tensor multiplication.");
+        }
+
+        Tensor<dtype> result(shape);
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+
+        for (int i = 0; i < num_elems; ++i) {
+            result.data()[i] = this->data()[i] * (*other_tensor)->data()[i];
+        }
+
+        result.set_children(children);
+        return result;
+    }
+    throw std::runtime_error("DType mismatch for tensor multiplication.");
+}
+
+
 template<DType dtype>
 void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {
     if (depth == shape.size() - 1) {
@@ -276,7 +349,7 @@ void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const st
 
 template<DType dtype>
 std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
-    os << "Tensor of type " << tensor.type << " with shape [";
+    os << "Tensor of type " << dtype_to_string(tensor.type)  << " with shape [";
     for (size_t i = 0; i < tensor.shape.size(); ++i) {
         os << tensor.shape[i];
         if (i < tensor.shape.size() - 1) {
@@ -295,3 +368,27 @@ template std::ostream& operator<<(std::ostream& os, const Tensor<INT32>& tensor)
 template std::ostream& operator<<(std::ostream& os, const Tensor<UINT8>& tensor);
 template std::ostream& operator<<(std::ostream& os, const Tensor<UINT32>& tensor);
 
+
+template Tensor<FLOAT16> Tensor<FLOAT16>::operator+(const TensorVariant& other) const;
+template Tensor<FLOAT16> Tensor<FLOAT16>::operator-(const TensorVariant& other) const;
+template Tensor<FLOAT16> Tensor<FLOAT16>::operator*(const TensorVariant& other) const;
+
+template Tensor<FLOAT32> Tensor<FLOAT32>::operator+(const TensorVariant& other) const;
+template Tensor<FLOAT32> Tensor<FLOAT32>::operator-(const TensorVariant& other) const;
+template Tensor<FLOAT32> Tensor<FLOAT32>::operator*(const TensorVariant& other) const;
+
+template Tensor<INT8> Tensor<INT8>::operator+(const TensorVariant& other) const;
+template Tensor<INT8> Tensor<INT8>::operator-(const TensorVariant& other) const;
+template Tensor<INT8> Tensor<INT8>::operator*(const TensorVariant& other) const;
+
+template Tensor<INT32> Tensor<INT32>::operator+(const TensorVariant& other) const;
+template Tensor<INT32> Tensor<INT32>::operator-(const TensorVariant& other) const;
+template Tensor<INT32> Tensor<INT32>::operator*(const TensorVariant& other) const;
+
+template Tensor<UINT8> Tensor<UINT8>::operator+(const TensorVariant& other) const;
+template Tensor<UINT8> Tensor<UINT8>::operator-(const TensorVariant& other) const;
+template Tensor<UINT8> Tensor<UINT8>::operator*(const TensorVariant& other) const;
+
+template Tensor<UINT32> Tensor<UINT32>::operator+(const TensorVariant& other) const;
+template Tensor<UINT32> Tensor<UINT32>::operator-(const TensorVariant& other) const;
+template Tensor<UINT32> Tensor<UINT32>::operator*(const TensorVariant& other) const;

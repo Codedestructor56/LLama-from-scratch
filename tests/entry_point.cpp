@@ -3,7 +3,7 @@
 #include "set_slice.h"
 #include "set_children.h"
 #include "change_dtype.h"
-
+#include "operation_tests.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -29,6 +29,11 @@ int main(int argc, char* argv[]) {
             std::cout << "Running change_dtype test..." << std::endl;
             test_change_dtype();
             break;
+        case 5:
+            std::cout << "Running operations test" << std::endl;
+            generate_test_cases();
+            break;
+
 
         default:
             std::cout << "Invalid test number." << std::endl;
