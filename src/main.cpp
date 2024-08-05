@@ -27,15 +27,12 @@ int main(){
   }
   Tensor<FLOAT16> tens= Tensor<FLOAT16>();
 
-  vector<int> shape{1,3,3};
+  vector<int> shape{132,345,367};
   vector<int> index{0,1,2};
 
-  vector<int> data{1,1,1,2,2,2,3,3,3};
   Tensor<FLOAT32> test = Tensor<FLOAT32>::rand(shape);
-  //cout<<test<<endl;
-  //cout<<test.get(index)<<endl;
-  //test.set(index, static_cast<float>(3));
-  //cout<<test<<endl;
-  Tensor<UINT8> test1 = Tensor<UINT8>(data, shape);
-  cout<<test1<<endl; 
+  cout<<test<<endl;
+  cout<<test.get(index)<<endl;
+  test.set(index, static_cast<float>(3));
+  cout<<test<<endl;
 }

@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <iostream>
 #include <random>
+#include <variant>
+#include <numeric> 
+#include <stdexcept>
 
 typedef enum {
     FLOAT16,
@@ -16,7 +19,6 @@ typedef enum {
     UINT8,
     UINT32
 } DType;
-
 
 template<DType dtype>
 struct DTypeToType;
@@ -38,7 +40,20 @@ struct DTypeToType<UINT8> { using Type = uint8_t; };
 
 template<>
 struct DTypeToType<UINT32> { using Type = uint32_t; };
+  
 
+
+template <DType dtype>
+class Tensor;
+
+using TensorVariant = std::variant<
+        std::shared_ptr<Tensor<FLOAT32>>, 
+        std::shared_ptr<Tensor<FLOAT16>>, 
+        std::shared_ptr<Tensor<INT32>>, 
+        std::shared_ptr<Tensor<UINT32>>, 
+        std::shared_ptr<Tensor<INT8>>, 
+        std::shared_ptr<Tensor<UINT8>>
+    >;
 
 extern size_t get_dtype_size(DType dtype);
 extern void* allocate_memory(DType dtype, size_t num_elements);
@@ -59,10 +74,20 @@ class Tensor : public std::enable_shared_from_this<Tensor<dtype>> {
 
 public:
     Tensor() : data_(nullptr), type(dtype) {}
+
+    Tensor(const std::vector<int>& shape):shape(shape){
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        data_ = static_cast<T*>(allocate_memory(dtype, num_elems * sizeof(T)));
+        for (int i = 0; i < num_elems; ++i) {
+            data_[i] = 0;
+        }
+    }
+
     Tensor(T* data, std::vector<int>& shape): type(dtype), data_(data), shape(shape){}
+
     Tensor(std::vector<T>& vec, std::vector<int>& shape): type(dtype), shape(shape){
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems!=vec.size()){
+        if(num_elems != vec.size()){
           throw std::runtime_error("Shape does not match the number of elements in vector");
         }
         data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
@@ -70,9 +95,10 @@ public:
             data_[i] = vec[i];
         }
     }
+
     Tensor(const std::vector<int>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems!=vec.size()){
+        if(num_elems != vec.size()){
           throw std::runtime_error("Shape does not match the number of elements in vector");
         }
         data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
@@ -83,7 +109,7 @@ public:
 
     Tensor(const std::vector<float>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems!=vec.size()){
+        if(num_elems != vec.size()){
           throw std::runtime_error("Shape does not match the number of elements in vector");
         }
         data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
@@ -103,10 +129,37 @@ public:
     void set_slice(const std::vector<int>& start_indices, const std::vector<int>& end_indices, const std::vector<T>& values);
     template<DType dt>
     friend std::ostream& operator<<(std::ostream& os, const Tensor<dt>& tensor);
+   
+    std::shared_ptr<Tensor<dtype>> shared_from_this() {
+        return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
+    }
 
-    Tensor<dtype> operator+(const Tensor<dtype>& other)const;
-    Tensor<dtype> operator-(const Tensor<dtype>& other)const;
-    Tensor<dtype> operator*(const Tensor<dtype>& other)const; 
+    template <DType new_dtype>
+    std::shared_ptr <const Tensor<new_dtype>> change_dtype() const {
+        auto new_tensor = std::make_shared<Tensor<new_dtype>>(shape);
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        for (int i = 0; i < num_elems; ++i) {
+            new_tensor->data_[i] = static_cast<typename DTypeToType<new_dtype>::Type>(data_[i]);
+        }
+        new_tensor->set_children(this->children); 
+        return new_tensor;
+    }
+
+    size_t get_children_size() const {
+        return children.size();
+    } 
+
+    const std::vector<TensorVariant>& get_children() const {
+        return children;
+    }
+
+    void set_children(const std::vector<TensorVariant>& children) {
+        this->children = children; 
+    }
+
+    std::shared_ptr<Tensor<dtype>> operator+(const Tensor<dtype>& other) const;
+    Tensor<dtype> operator-(const Tensor<dtype>& other) const;
+    Tensor<dtype> operator*(const Tensor<dtype>& other) const; 
 
     T* data() const { return data_; } 
 
@@ -116,11 +169,10 @@ public:
 
 private:
     T* data_;  
-    std::vector<std::shared_ptr<Tensor<dtype>>> children;
+    std::vector<TensorVariant> children;
 
     void allocate_and_initialize(const std::vector<int>& shape, bool zero_initialize, bool is_rand);
 };
-
 
 //defining it outside the class
 template<DType dtype>

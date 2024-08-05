@@ -1,7 +1,7 @@
 #include "tensor.h"
 #include "get_slice.h"
 #include "set_slice.h"
-
+#include "set_children.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -19,8 +19,13 @@ int main(int argc, char* argv[]) {
             std::cout << "Running set_slice test..." << std::endl;
             test_set_slice();
             break;
+        case 3:
+            std::cout << "Running set_chilren test..." << std::endl;
+            test_set_children();
+            break;
+
         default:
-            std::cout << "Invalid test number. Provide 1 for get_slice, 2 for set_slice" << std::endl;
+            std::cout << "Invalid test number." << std::endl;
             return 1;
     }
 
