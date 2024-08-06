@@ -249,66 +249,57 @@ void Tensor<dtype>::set_slice(const std::vector<int>& start_indices, const std::
     }
 }
 
-template <DType dtype>
-Tensor<dtype> Tensor<dtype>::operator+(const TensorVariant& other) const {
-    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
-        if (shape != (*other_tensor)->shape) {
-            throw std::runtime_error("Shapes do not match for tensor addition.");
+template<DType dtype>
+template <typename Op>
+Tensor<dtype> Tensor<dtype>::tensorOperation(const TensorVariant& rhs, Op op) const {
+    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&rhs)) {
+        if (this->shape != (*other_tensor)->shape) {
+            throw std::runtime_error("Shapes do not match for tensor operation.");
         }
 
-        Tensor<dtype> result(shape);
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        Tensor<dtype> result(this->shape);
+        int num_elems = std::accumulate(this->shape.begin(), this->shape.end(), 1, std::multiplies<int>());
 
         for (int i = 0; i < num_elems; ++i) {
-            result.data()[i] = this->data()[i] + (*other_tensor)->data()[i];
+            result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
         }
-
-        result.set_children(children);
+        
+        result.type = dtype;
+        result.set_children(this->get_children());
         return result;
     }
-    throw std::runtime_error("DType mismatch for tensor addition.");
+    throw std::runtime_error("DType mismatch for tensor operation.");
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator+(const Tensor<dtype>& other) const {
+    return tensorOperation(std::make_shared<Tensor<dtype>>(other), std::plus<typename DTypeToType<dtype>::Type>());
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator-(const Tensor<dtype>& other) const {
+    return tensorOperation(std::make_shared<Tensor<dtype>>(other), std::minus<typename DTypeToType<dtype>::Type>());
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator*(const Tensor<dtype>& other) const {
+    return tensorOperation(std::make_shared<Tensor<dtype>>(other), std::multiplies<typename DTypeToType<dtype>::Type>());
+}
+
+template <DType dtype>
+Tensor<dtype> Tensor<dtype>::operator+(const TensorVariant& other) const {
+    return tensorOperation(other, std::plus<typename DTypeToType<dtype>::Type>());
 }
 
 template <DType dtype>
 Tensor<dtype> Tensor<dtype>::operator-(const TensorVariant& other) const {
-    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
-        if (shape != (*other_tensor)->shape) {
-            throw std::runtime_error("Shapes do not match for tensor subtraction.");
-        }
-
-        Tensor<dtype> result(shape);
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-
-        for (int i = 0; i < num_elems; ++i) {
-            result.data()[i] = this->data()[i] - (*other_tensor)->data()[i];
-        }
-
-        result.set_children(children);
-        return result;
-    }
-    throw std::runtime_error("DType mismatch for tensor subtraction.");
+    return tensorOperation(other, std::minus<typename DTypeToType<dtype>::Type>());
 }
 
 template <DType dtype>
 Tensor<dtype> Tensor<dtype>::operator*(const TensorVariant& other) const {
-    if (auto other_tensor = std::get_if<std::shared_ptr<Tensor<dtype>>>(&other)) {
-        if (shape != (*other_tensor)->shape) {
-            throw std::runtime_error("Shapes do not match for tensor multiplication.");
-        }
-
-        Tensor<dtype> result(shape);
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-
-        for (int i = 0; i < num_elems; ++i) {
-            result.data()[i] = this->data()[i] * (*other_tensor)->data()[i];
-        }
-
-        result.set_children(children);
-        return result;
-    }
-    throw std::runtime_error("DType mismatch for tensor multiplication.");
+    return tensorOperation(other, std::multiplies<typename DTypeToType<dtype>::Type>());
 }
-
 
 template<DType dtype>
 void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {

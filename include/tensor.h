@@ -164,9 +164,13 @@ public:
         this->children = children; 
     }
 
+    Tensor<dtype> operator+(const Tensor<dtype>& other) const;
+    Tensor<dtype> operator-(const Tensor<dtype>& other) const;
+    Tensor<dtype> operator*(const Tensor<dtype>& other) const; 
+    
     Tensor<dtype> operator+(const TensorVariant& other) const;
     Tensor<dtype> operator-(const TensorVariant& other) const;
-    Tensor<dtype> operator*(const TensorVariant& other) const; 
+    Tensor<dtype> operator*(const TensorVariant& other) const;
 
     T* data() const { return data_; } 
     void data_set(const T* data) { data_ = const_cast<T*>(data);}
@@ -175,6 +179,8 @@ public:
     std::shared_ptr<Tensor> grad;
 
 private:
+    template <typename Op>
+    Tensor<dtype> tensorOperation(const TensorVariant& rhs, Op op) const;
     T* data_;  
     std::vector<TensorVariant> children;
 
