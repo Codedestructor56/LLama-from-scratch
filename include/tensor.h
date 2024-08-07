@@ -83,7 +83,7 @@ public:
         }
     }
 
-    Tensor(T* data, std::vector<int>& shape): type(dtype), data_(data), shape(shape){}
+    Tensor(T* data,const std::vector<int>& shape): type(dtype), data_(data), shape(shape){}
 
     Tensor(std::vector<T>& vec, std::vector<int>& shape): type(dtype), shape(shape){
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
@@ -96,7 +96,7 @@ public:
         }
     }
 
-    Tensor(const std::vector<int>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
+    Tensor(const std::vector<int>& vec, const std::vector<int>& shape) : type(dtype), shape(shape) {
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
         if(num_elems != vec.size()){
           throw std::runtime_error("Shape does not match the number of elements in vector");
@@ -189,7 +189,7 @@ private:
 
 //defining it outside the class
 template<DType dtype>
-Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
+extern Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
 
 // Explicit template instantiation
 template class Tensor<FLOAT16>;

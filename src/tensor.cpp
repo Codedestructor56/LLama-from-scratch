@@ -302,6 +302,52 @@ Tensor<dtype> Tensor<dtype>::operator*(const TensorVariant& other) const {
 }
 
 template<DType dtype>
+Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
+    using T = typename DTypeToType<dtype>::Type;
+
+    if (tens1.shape.size() < 2 || tens2.shape.size() < 2) {
+        throw std::runtime_error("matmul requires both tensors to be at least 2-dimensional");
+    }
+
+    int axis1 = tens1.shape.size() - 1;
+    int axis2 = tens2.shape.size() - 2;
+
+    if (tens1.shape[axis1] != tens2.shape[axis2]) {
+        throw std::runtime_error("Inner dimensions must match for matrix multiplication");
+    }
+
+    std::vector<int> result_shape;
+    result_shape.insert(result_shape.end(), tens1.shape.begin(), tens1.shape.end() - 1);
+    result_shape.insert(result_shape.end(), tens2.shape.begin(), tens2.shape.end() - 2);
+    result_shape.push_back(tens2.shape.back());
+
+    Tensor<dtype> result(result_shape);
+    T* result_data = result.data();
+
+    const T* data1 = tens1.data();
+    const T* data2 = tens2.data();
+
+    int m = std::accumulate(tens1.shape.begin(), tens1.shape.end() - 1, 1, std::multiplies<int>());
+    int n = tens1.shape.back();
+    int p = tens2.shape.back();
+
+    std::fill(result_data, result_data + result_shape.back() * m, T(0));
+
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < p; ++j) {
+            for (int k = 0; k < n; ++k) {
+                int result_index = i * p + j;
+                int data1_index = i * n + k;
+                int data2_index = k * p + j;
+                result_data[result_index] += data1[data1_index] * data2[data2_index];
+            }
+        }
+    }
+
+    return result;
+}
+
+template<DType dtype>
 void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {
     if (depth == shape.size() - 1) {
         os << "[";
@@ -351,6 +397,13 @@ std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
     print_tensor_data<dtype>(os, tensor.shape, {}, tensor.data(), 0);
     return os;
 }
+
+template Tensor<FLOAT16> matmul<FLOAT16>(const Tensor<FLOAT16>&, const Tensor<FLOAT16>&);
+template Tensor<FLOAT32> matmul<FLOAT32>(const Tensor<FLOAT32>&, const Tensor<FLOAT32>&);
+template Tensor<INT8> matmul<INT8>(const Tensor<INT8>&, const Tensor<INT8>&);
+template Tensor<INT32> matmul<INT32>(const Tensor<INT32>&, const Tensor<INT32>&);
+template Tensor<UINT8> matmul<UINT8>(const Tensor<UINT8>&, const Tensor<UINT8>&);
+template Tensor<UINT32> matmul<UINT32>(const Tensor<UINT32>&, const Tensor<UINT32>&);
 
 template std::ostream& operator<<(std::ostream& os, const Tensor<FLOAT16>& tensor);
 template std::ostream& operator<<(std::ostream& os, const Tensor<FLOAT32>& tensor);
