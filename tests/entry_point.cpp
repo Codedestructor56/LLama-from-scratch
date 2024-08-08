@@ -6,6 +6,7 @@
 #include "operation_tests.h"
 #include "matmul.h"
 #include "reshape.h"
+#include "stacking.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -42,6 +43,10 @@ int main(int argc, char* argv[]) {
         case 7:
             std::cout << "Running reshape test..." << std::endl;
             test_reshape();
+            break;
+        case 8:
+            std::cout << "Running stacking test..." << std::endl;
+            test_stack();
             break;
 
         default:

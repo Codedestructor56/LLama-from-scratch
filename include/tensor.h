@@ -192,6 +192,18 @@ private:
 template<DType dtype>
 extern Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
 
+
+template<DType dtype>
+extern Tensor<dtype> hstack(const std::vector<Tensor<dtype>>& tensors);
+
+template<DType dtype>
+extern Tensor<dtype> hstack(const Tensor<dtype>& tensor1, const Tensor<dtype>& tensor2);
+
+template<DType dtype>
+extern Tensor<dtype> vstack(const std::vector<Tensor<dtype>>& tensors);
+
+template <DType dtype>
+Tensor<dtype> vstack(const Tensor<dtype>& tensor1, const Tensor<dtype>& tensor2); 
 // Explicit template instantiation
 template class Tensor<FLOAT16>;
 template class Tensor<FLOAT32>;

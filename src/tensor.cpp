@@ -378,6 +378,82 @@ Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
     return result;
 }
 
+template <DType dtype>
+Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
+    if (tensors.empty()) {
+        throw std::runtime_error("No tensors provided for hstack.");
+    }
+
+    int rows = tensors[0].shape[0];
+    int total_cols = 0;
+    for (const auto& tensor : tensors) {
+        if (tensor.shape.size() != 2 || tensor.shape[0] != rows) {
+            throw std::runtime_error("Incompatible tensor dimensions for hstack.");
+        }
+        total_cols += tensor.shape[1];
+    }
+
+    std::vector<int> new_shape = {rows, total_cols};
+    Tensor<dtype> result(new_shape);
+
+    int col_offset = 0;
+    for (const auto& tensor : tensors) {
+        for (int i = 0; i < rows; ++i) {
+            std::copy(tensor.data() + i * tensor.shape[1], tensor.data() + (i + 1) * tensor.shape[1], result.data() + i * total_cols + col_offset);
+        }
+        col_offset += tensor.shape[1];
+    }
+
+    return result;
+}
+
+template <DType dtype>
+Tensor<dtype> hstack(const Tensor<dtype>& tensor1, const Tensor<dtype>& tensor2) {
+    return hstack_impl<dtype>({tensor1, tensor2});
+}
+
+template <DType dtype>
+Tensor<dtype> hstack(const std::vector<Tensor<dtype>>& tensors) {
+    return hstack_impl<dtype>(tensors);
+}
+
+template <DType dtype>
+Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
+    if (tensors.empty()) {
+        throw std::runtime_error("No tensors provided for vstack.");
+    }
+
+    int cols = tensors[0].shape[1];
+    int total_rows = 0;
+    for (const auto& tensor : tensors) {
+        if (tensor.shape.size() != 2 || tensor.shape[1] != cols) {
+            throw std::runtime_error("Incompatible tensor dimensions for vstack.");
+        }
+        total_rows += tensor.shape[0];
+    }
+
+    std::vector<int> new_shape = {total_rows, cols};
+    Tensor<dtype> result(new_shape);
+
+    int row_offset = 0;
+    for (const auto& tensor : tensors) {
+        std::copy(tensor.data(), tensor.data() + tensor.shape[0] * cols, result.data() + row_offset * cols);
+        row_offset += tensor.shape[0];
+    }
+
+    return result;
+}
+
+template <DType dtype>
+Tensor<dtype> vstack(const Tensor<dtype>& tensor1, const Tensor<dtype>& tensor2) {
+    return vstack_impl<dtype>({tensor1, tensor2});
+}
+
+template <DType dtype>
+Tensor<dtype> vstack(const std::vector<Tensor<dtype>>& tensors) {
+    return vstack_impl<dtype>(tensors);
+}
+
 template<DType dtype>
 void print_tensor_data(std::ostream& os, const std::vector<int>& shape, const std::vector<int>& indices, const typename DTypeToType<dtype>::Type* data, int depth) {
     if (depth == shape.size() - 1) {
@@ -428,6 +504,34 @@ std::ostream& operator<<(std::ostream& os, const Tensor<dtype>& tensor) {
     print_tensor_data<dtype>(os, tensor.shape, {}, tensor.data(), 0);
     return os;
 }
+
+template Tensor<FLOAT16> hstack(const std::vector<Tensor<FLOAT16>>& tensors);
+template Tensor<FLOAT32> hstack(const std::vector<Tensor<FLOAT32>>& tensors);
+template Tensor<INT8> hstack(const std::vector<Tensor<INT8>>& tensors);
+template Tensor<INT32> hstack(const std::vector<Tensor<INT32>>& tensors);
+template Tensor<UINT8> hstack(const std::vector<Tensor<UINT8>>& tensors);
+template Tensor<UINT32> hstack(const std::vector<Tensor<UINT32>>& tensors);
+
+template Tensor<FLOAT16> hstack(const Tensor<FLOAT16>& tensor1, const Tensor<FLOAT16>& tensor2);
+template Tensor<FLOAT32> hstack(const Tensor<FLOAT32>& tensor1, const Tensor<FLOAT32>& tensor2); 
+template Tensor<INT8> hstack(const Tensor<INT8>& tensor1, const Tensor<INT8>& tensor2); 
+template Tensor<INT32> hstack(const Tensor<INT32>& tensor1, const Tensor<INT32>& tensor2); 
+template Tensor<UINT8> hstack(const Tensor<UINT8>& tensor1, const Tensor<UINT8>& tensor2); 
+template Tensor<UINT32> hstack(const Tensor<UINT32>& tensor1, const Tensor<UINT32>& tensor2); 
+
+template Tensor<FLOAT16> vstack(const std::vector<Tensor<FLOAT16>>& tensors);
+template Tensor<FLOAT32> vstack(const std::vector<Tensor<FLOAT32>>& tensors);
+template Tensor<INT8> vstack(const std::vector<Tensor<INT8>>& tensors);
+template Tensor<INT32> vstack(const std::vector<Tensor<INT32>>& tensors);
+template Tensor<UINT8> vstack(const std::vector<Tensor<UINT8>>& tensors);
+template Tensor<UINT32> vstack(const std::vector<Tensor<UINT32>>& tensors);
+
+template Tensor<FLOAT16> vstack(const Tensor<FLOAT16>& tensor1, const Tensor<FLOAT16>& tensor2);
+template Tensor<FLOAT32> vstack(const Tensor<FLOAT32>& tensor1, const Tensor<FLOAT32>& tensor2); 
+template Tensor<INT8> vstack(const Tensor<INT8>& tensor1, const Tensor<INT8>& tensor2); 
+template Tensor<INT32> vstack(const Tensor<INT32>& tensor1, const Tensor<INT32>& tensor2); 
+template Tensor<UINT8> vstack(const Tensor<UINT8>& tensor1, const Tensor<UINT8>& tensor2); 
+template Tensor<UINT32> vstack(const Tensor<UINT32>& tensor1, const Tensor<UINT32>& tensor2); 
 
 template Tensor<FLOAT16> matmul<FLOAT16>(const Tensor<FLOAT16>&, const Tensor<FLOAT16>&);
 template Tensor<FLOAT32> matmul<FLOAT32>(const Tensor<FLOAT32>&, const Tensor<FLOAT32>&);
