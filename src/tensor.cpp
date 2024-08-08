@@ -211,7 +211,7 @@ void Tensor<dtype>::set_slice(const std::vector<int>& start_indices, const std::
 
     int slice_size = 1;
     for (size_t i = 0; i < start_indices.size(); ++i) {
-        int end = (end_indices[i] == -1) ? shape[i] : end_indices[i];
+        int end = (end_indices[i] == -1) ? this->shape[i] : end_indices[i];
         int slice_dim_size = end - start_indices[i];
 
         if (slice_dim_size <= 0) {
@@ -301,6 +301,37 @@ Tensor<dtype> Tensor<dtype>::operator*(const TensorVariant& other) const {
     return tensorOperation(other, std::multiplies<typename DTypeToType<dtype>::Type>());
 }
 
+
+template<DType dtype>
+void Tensor<dtype>::reshape(const std::vector<int>& new_shape) {
+    std::vector<int> mutable_new_shape = new_shape;
+    int orig_elems = std::accumulate(this->shape.begin(), this->shape.end(), 1, std::multiplies<int>());
+    int new_elems = 1;
+    int infer_index = -1;
+ 
+    for (int i = 0; i < mutable_new_shape.size(); i++) {
+        if (mutable_new_shape[i] == -1) {
+            if (infer_index != -1) {
+                throw std::runtime_error("Only one dimension can be inferred");
+            }
+            infer_index = i;
+        } else {
+            new_elems *= mutable_new_shape[i];
+        }
+    }
+
+    if (infer_index != -1) {
+        if (orig_elems % new_elems != 0) {
+            throw std::runtime_error("The new shape does not match the tensor's shape");
+        }
+        mutable_new_shape[infer_index] = orig_elems / new_elems;
+    } else if (new_elems != orig_elems) {
+        throw std::runtime_error("The new shape does not match the tensor's shape");
+    }
+
+    this->shape = mutable_new_shape;
+}
+
 template<DType dtype>
 Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
     using T = typename DTypeToType<dtype>::Type;
@@ -343,7 +374,7 @@ Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
             }
         }
     }
-
+    result.type = dtype;
     return result;
 }
 

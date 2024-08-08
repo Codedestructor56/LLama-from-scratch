@@ -5,7 +5,7 @@
 #include "change_dtype.h"
 #include "operation_tests.h"
 #include "matmul.h"
-
+#include "reshape.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -32,12 +32,16 @@ int main(int argc, char* argv[]) {
             test_change_dtype();
             break;
         case 5:
-            std::cout << "Running operations test" << std::endl;
+            std::cout << "Running operations test..." << std::endl;
             generate_test_cases();
             break;
         case 6:
-            std::cout << "Running matmul test" << std::endl;
+            std::cout << "Running matmul test..." << std::endl;
             matmul_tests();
+            break;
+        case 7:
+            std::cout << "Running reshape test..." << std::endl;
+            test_reshape();
             break;
 
         default:
