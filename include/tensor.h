@@ -20,6 +20,11 @@ typedef enum {
     UINT32
 } DType;
 
+typedef enum{
+  CUDA,
+  CPU
+} Device;
+
 template<DType dtype>
 struct DTypeToType;
 
@@ -165,6 +170,14 @@ public:
         this->children = children; 
     }
 
+    Device get_device(){
+      return tens_device;
+    }
+
+    void change_device(const Device& device){
+      tens_device = device;
+    }
+
     Tensor<dtype> operator+(const Tensor<dtype>& other) const;
     Tensor<dtype> operator-(const Tensor<dtype>& other) const;
     Tensor<dtype> operator*(const Tensor<dtype>& other) const; 
@@ -180,6 +193,7 @@ public:
     std::shared_ptr<Tensor> grad;
 
 private:
+    Device tens_device;
     template <typename Op>
     Tensor<dtype> tensorOperation(const TensorVariant& rhs, Op op) const;
     T* data_;  

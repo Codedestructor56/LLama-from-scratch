@@ -403,7 +403,7 @@ Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
         }
         col_offset += tensor.shape[1];
     }
-
+    result.type = dtype;
     return result;
 }
 
@@ -440,7 +440,8 @@ Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
         std::copy(tensor.data(), tensor.data() + tensor.shape[0] * cols, result.data() + row_offset * cols);
         row_offset += tensor.shape[0];
     }
-
+    
+    result.type = dtype;
     return result;
 }
 
