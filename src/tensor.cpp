@@ -91,6 +91,7 @@ template <DType dtype>
 Tensor<dtype> Tensor<dtype>::ones(const std::vector<int>& shape) {
     Tensor<dtype> tensor;
     tensor.allocate_and_initialize(shape, false, false);
+    tensor.change_device(CPU);
     return tensor;
 }
 
@@ -98,6 +99,7 @@ template <DType dtype>
 Tensor<dtype> Tensor<dtype>::zeros(const std::vector<int>& shape) {
     Tensor tensor;
     tensor.allocate_and_initialize(shape, true, false);
+    tensor.change_device(CPU);
     return tensor;
 }
 
@@ -105,6 +107,7 @@ template <DType dtype>
 Tensor<dtype> Tensor<dtype>::rand(const std::vector<int>& shape) {
     Tensor tensor;
     tensor.allocate_and_initialize(shape, false, true);
+    tensor.change_device(CPU);
     return tensor;
 }
 
@@ -256,12 +259,18 @@ Tensor<dtype> Tensor<dtype>::tensorOperation(const TensorVariant& rhs, Op op) co
         if (this->shape != (*other_tensor)->shape) {
             throw std::runtime_error("Shapes do not match for tensor operation.");
         }
-
+        auto device = this->get_device();
         Tensor<dtype> result(this->shape);
         int num_elems = std::accumulate(this->shape.begin(), this->shape.end(), 1, std::multiplies<int>());
-
-        for (int i = 0; i < num_elems; ++i) {
-            result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
+        
+        if(device == CUDA){
+          using T = typename DTypeToType<dtype>::Type;
+          tensorOperationCuda<T, Op>(this->data(), (*other_tensor)->data(), result.data(), num_elems, op, 256);
+        }
+        else{
+          for (int i = 0; i < num_elems; ++i) {
+              result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
+          }
         }
         
         result.type = dtype;
@@ -572,3 +581,6 @@ template Tensor<UINT8> Tensor<UINT8>::operator*(const TensorVariant& other) cons
 template Tensor<UINT32> Tensor<UINT32>::operator+(const TensorVariant& other) const;
 template Tensor<UINT32> Tensor<UINT32>::operator-(const TensorVariant& other) const;
 template Tensor<UINT32> Tensor<UINT32>::operator*(const TensorVariant& other) const;
+
+
+

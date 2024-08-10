@@ -10,6 +10,7 @@
 #include <variant>
 #include <numeric> 
 #include <stdexcept>
+#include <cuda_runtime.h>
 
 typedef enum {
     FLOAT16,
@@ -78,9 +79,9 @@ class Tensor : public std::enable_shared_from_this<Tensor<dtype>> {
     );
 
 public:
-    Tensor() : data_(nullptr), type(dtype) {}
+    Tensor() : data_(nullptr), type(dtype), tens_device(CPU) {}
 
-    Tensor(const std::vector<int>& shape):shape(shape){
+    Tensor(const std::vector<int>& shape) : shape(shape), tens_device(CPU) {
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
         data_ = static_cast<T*>(allocate_memory(dtype, num_elems * sizeof(T)));
         for (int i = 0; i < num_elems; ++i) {
@@ -88,41 +89,27 @@ public:
         }
     }
 
-    Tensor(T* data,const std::vector<int>& shape): type(dtype), data_(data), shape(shape){}
+    Tensor(T* data, const std::vector<int>& shape) 
+        : type(dtype), data_(data), shape(shape), tens_device(CPU) {}
 
-    Tensor(std::vector<T>& vec, std::vector<int>& shape): type(dtype), shape(shape){
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems != vec.size()){
-          throw std::runtime_error("Shape does not match the number of elements in vector");
-        }
-        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
-        for (size_t i = 0; i < vec.size(); ++i) {
-            data_[i] = vec[i];
-        }
+    Tensor(T* data, const std::vector<int>& shape, Device device) 
+        : type(dtype), data_(data), shape(shape), tens_device(device) {}
+
+    Tensor(std::vector<T>& vec, std::vector<int>& shape) 
+        : type(dtype), shape(shape), tens_device(CPU) {
+        initialize_from_vector(vec, shape);
     }
 
-    Tensor(const std::vector<int>& vec, const std::vector<int>& shape) : type(dtype), shape(shape) {
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems != vec.size()){
-          throw std::runtime_error("Shape does not match the number of elements in vector");
-        }
-        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
-        for (size_t i = 0; i < vec.size(); ++i) {
-            data_[i] = static_cast<T>(vec[i]);
-        }
+    Tensor(const std::vector<int>& vec, const std::vector<int>& shape) 
+        : type(dtype), shape(shape), tens_device(CPU) {
+        initialize_from_vector(vec, shape);
     }
 
-    Tensor(const std::vector<float>& vec, std::vector<int>& shape) : type(dtype), shape(shape) {
-        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        if(num_elems != vec.size()){
-          throw std::runtime_error("Shape does not match the number of elements in vector");
-        }
-        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
-        for (size_t i = 0; i < vec.size(); ++i) {
-            data_[i] = static_cast<T>(vec[i]);
-        }
+    Tensor(const std::vector<float>& vec, std::vector<int>& shape) 
+        : type(dtype), shape(shape), tens_device(CPU) {
+        initialize_from_vector(vec, shape);
     }
-
+       
     static Tensor<dtype> ones(const std::vector<int>& shape);
     static Tensor<dtype> zeros(const std::vector<int>& shape);
     static Tensor<dtype> rand(const std::vector<int>& shape);
@@ -170,7 +157,7 @@ public:
         this->children = children; 
     }
 
-    Device get_device(){
+    Device get_device() const{
       return tens_device;
     }
 
@@ -200,8 +187,23 @@ private:
     std::vector<TensorVariant> children;
 
     void allocate_and_initialize(const std::vector<int>& shape, bool zero_initialize, bool is_rand);
+
+    template <typename VecType>
+    void initialize_from_vector(const std::vector<VecType>& vec, const std::vector<int>& shape) {
+        int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+        if (num_elems != vec.size()) {
+            throw std::runtime_error("Shape does not match the number of elements in vector");
+        }
+        data_ = static_cast<T*>(allocate_memory(dtype, vec.size()));
+        for (size_t i = 0; i < vec.size(); ++i) {
+            data_[i] = static_cast<T>(vec[i]);
+        }
+    }
 };
 
+
+template <typename T, typename Op>
+void tensorOperationCuda(const T* a, const T* b, T* result, int num_elems, Op op, int block_size);
 //defining it outside the class
 template<DType dtype>
 extern Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
@@ -225,5 +227,6 @@ template class Tensor<INT8>;
 template class Tensor<INT32>;
 template class Tensor<UINT8>;
 template class Tensor<UINT32>;
+
 
 #endif
