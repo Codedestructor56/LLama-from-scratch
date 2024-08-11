@@ -372,18 +372,23 @@ Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
     int p = tens2.shape.back();
 
     std::fill(result_data, result_data + result_shape.back() * m, T(0));
-
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < p; ++j) {
-            for (int k = 0; k < n; ++k) {
-                int result_index = i * p + j;
-                int data1_index = i * n + k;
-                int data2_index = k * p + j;
-                result_data[result_index] += data1[data1_index] * data2[data2_index];
-            }
-        }
+    if(tens1.get_device()==CUDA && tens2.get_device()==CUDA){
+      matmul_cuda(data1, data2, result_data, m, n, p);
+    }
+    else{
+      for (int i = 0; i < m; ++i) {
+          for (int j = 0; j < p; ++j) {
+              for (int k = 0; k < n; ++k) {
+                  int result_index = i * p + j;
+                  int data1_index = i * n + k;
+                  int data2_index = k * p + j;
+                  result_data[result_index] += data1[data1_index] * data2[data2_index];
+              }
+          }
+      }
     }
     result.type = dtype;
+    //result.set_children(std::vector{std::make_shared(tens1), std::make_shared(tens2)});
     return result;
 }
 

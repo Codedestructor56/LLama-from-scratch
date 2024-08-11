@@ -204,6 +204,8 @@ private:
 
 template <typename T, typename Op>
 void tensorOperationCuda(const T* a, const T* b, T* result, int num_elems, Op op, int block_size);
+template <typename T>
+void matmul_cuda(const T* A, const T* B, T* C, int m, int n, int p); 
 //defining it outside the class
 template<DType dtype>
 extern Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
