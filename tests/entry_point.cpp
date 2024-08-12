@@ -8,6 +8,7 @@
 #include "reshape.h"
 #include "stacking.h"
 #include "bench_ops.h"
+#include "matmul_benchmark.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -51,8 +52,13 @@ int main(int argc, char* argv[]) {
             break;
         case 9:
             std::cout << "Running Benchmark test for simple ops(CUDA vs CPU)..." << std::endl;
-            benchmarkTensorOperations(100000000);
+            benchmarkTensorOperations(100000);
             break;
+        case 10:
+            std::cout << "Running Benchmark test for matmul(CUDA vs CPU)..." << std::endl;
+            benchmark_matmul();
+            break;
+
 
         default:
             std::cout << "Invalid test number." << std::endl;

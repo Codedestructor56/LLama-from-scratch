@@ -111,6 +111,11 @@ void matmul_cuda(const T* A, const T* B, T* C, int m, int n, int p) {
         reinterpret_cast<float*>(C), m, n, p);
     
     C = reinterpret_cast<T*>(C);
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA Error: " << cudaGetErrorString(err) << std::endl;
+    }
     cudaDeviceSynchronize();
 }
 

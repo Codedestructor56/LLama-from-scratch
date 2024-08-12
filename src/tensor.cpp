@@ -265,21 +265,28 @@ Tensor<dtype> Tensor<dtype>::tensorOperation(const TensorVariant& rhs, Op op) co
         auto device = this->get_device();
         Tensor<dtype> result(this->shape);
         int num_elems = std::accumulate(this->shape.begin(), this->shape.end(), 1, std::multiplies<int>());
-        
-        if(device == CUDA){
-          using T = typename DTypeToType<dtype>::Type;
-          tensorOperationCuda<T, Op>(this->data(), (*other_tensor)->data(), result.data(), num_elems, op, 256);
+         
+        if (device == CUDA) {
+            using T = typename DTypeToType<dtype>::Type;
+            tensorOperationCuda<T, Op>(this->data(), (*other_tensor)->data(), result.data(), num_elems, op, 256);
+        } else {
+            for (int i = 0; i < num_elems; ++i) {
+                result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
+            }
         }
-        else{
-          for (int i = 0; i < num_elems; ++i) {
-              result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
-          }
+
+        std::shared_ptr<Tensor<dtype>> this_shared;
+        try {
+            this_shared = std::const_pointer_cast<Tensor<dtype>>(this->shared_from_this());
+        } catch (const std::bad_weak_ptr&) {
+            this_shared = std::make_shared<Tensor<dtype>>(*this);
         }
         std::vector<TensorVariant> children;
-        children.push_back(std::const_pointer_cast<Tensor<dtype>>(this->shared_from_this()));
+        children.push_back(std::const_pointer_cast<Tensor<dtype>>(this_shared));
         children.push_back(*other_tensor);
-        result.type = dtype;
         result.set_children(children);
+
+        result.type = dtype;
         return result;
     }
     throw std::runtime_error("DType mismatch for tensor operation.");
