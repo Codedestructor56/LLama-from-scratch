@@ -109,7 +109,15 @@ public:
         : type(dtype), shape(shape), tens_device(CPU) {
         initialize_from_vector(vec, shape);
     }
-       
+    
+    std::shared_ptr<Tensor<dtype>> shared_from_this() {
+        return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
+    }
+
+    std::shared_ptr<const Tensor<dtype>> shared_from_this() const{
+        return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
+    }
+
     static Tensor<dtype> ones(const std::vector<int>& shape);
     static Tensor<dtype> zeros(const std::vector<int>& shape);
     static Tensor<dtype> rand(const std::vector<int>& shape);
@@ -123,12 +131,7 @@ public:
     void reshape(const std::vector<int>& new_shape);
     template<DType dt>
     friend std::ostream& operator<<(std::ostream& os, const Tensor<dt>& tensor);
-   
-    std::shared_ptr<Tensor<dtype>> shared_from_this() {
-        return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
-    }
-
-    
+       
     template <DType new_dtype>
     std::shared_ptr<const Tensor<new_dtype>> change_dtype() const {
         auto new_tensor = std::make_shared<Tensor<new_dtype>>(shape);

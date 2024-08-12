@@ -203,7 +203,10 @@ Tensor<dtype> Tensor<dtype>::get_slice(const std::vector<int>& start_indices, co
         }
     }
 
-    return Tensor<dtype>(result_data, result_shape);
+    Tensor<dtype> result = Tensor<dtype>(result_data, result_shape);
+    result.type = dtype;
+    result.set_children({TensorVariant(std::const_pointer_cast<Tensor<dtype>>(this->shared_from_this()))});
+    return result;
 }
 
 template<DType dtype>
@@ -272,9 +275,11 @@ Tensor<dtype> Tensor<dtype>::tensorOperation(const TensorVariant& rhs, Op op) co
               result.data()[i] = op(this->data()[i], (*other_tensor)->data()[i]);
           }
         }
-        
+        std::vector<TensorVariant> children;
+        children.push_back(std::const_pointer_cast<Tensor<dtype>>(this->shared_from_this()));
+        children.push_back(*other_tensor);
         result.type = dtype;
-        result.set_children(this->get_children());
+        result.set_children(children);
         return result;
     }
     throw std::runtime_error("DType mismatch for tensor operation.");
@@ -388,7 +393,8 @@ Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2) {
       }
     }
     result.type = dtype;
-    //result.set_children(std::vector{std::make_shared(tens1), std::make_shared(tens2)});
+    result.set_children(std::vector<TensorVariant>{std::make_shared<Tensor<dtype>>(tens1), 
+        std::make_shared<Tensor<dtype>>(tens2)});
     return result;
 }
 
