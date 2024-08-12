@@ -424,6 +424,10 @@ Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
         col_offset += tensor.shape[1];
     }
     result.type = dtype;
+    std::vector<TensorVariant> children;
+    children.push_back(std::make_shared<Tensor<dtype>>(tensors[0]));
+    children.push_back(std::make_shared<Tensor<dtype>>(tensors[1]));
+    result.set_children(children);
     return result;
 }
 
@@ -462,6 +466,10 @@ Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
     }
     
     result.type = dtype;
+    std::vector<TensorVariant> children;
+    children.push_back(std::make_shared<Tensor<dtype>>(tensors[0]));
+    children.push_back(std::make_shared<Tensor<dtype>>(tensors[1]));
+    result.set_children(children);
     return result;
 }
 
