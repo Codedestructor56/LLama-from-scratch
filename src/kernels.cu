@@ -12,17 +12,22 @@ struct IsMulOperation<std::multiplies<float>> {
 };
 
 template <typename Op>
-struct IsAddOrSubOperation {
+struct IsAddOperation {
     static const bool value = false;
 };
 
 template <>
-struct IsAddOrSubOperation<std::plus<float>> {
+struct IsAddOperation<std::plus<float>> {
     static const bool value = true;
 };
 
+template <typename Op>
+struct IsSubOperation {
+    static const bool value = false;
+};
+
 template <>
-struct IsAddOrSubOperation<std::minus<float>> {
+struct IsSubOperation<std::minus<float>> {
     static const bool value = true;
 };
 
@@ -41,8 +46,6 @@ __global__ void atomicMulKernel(float* data, float* values, int size) {
         atomicmul(&data[idx], values[idx]);
     }
 }
-
-
 
 void atomicMulTensor(Tensor<FLOAT32>& tensor, const Tensor<FLOAT32>& values) {
     if (tensor.shape != values.shape) {
@@ -72,11 +75,7 @@ void atomicMulTensor(Tensor<FLOAT32>& tensor, const Tensor<FLOAT32>& values) {
 
 template <typename T>
 __device__ void AtomicMul(T* address, T val) {
-    if constexpr (std::is_same_v<T, float>) {
-        atomicmul(address, val);
-    } else {
-        atomicmul(reinterpret_cast<float*>(address), static_cast<float>(val));
-    }
+    atomicmul(reinterpret_cast<float*>(address), static_cast<float>(val));
 }
 
 template<typename T, typename Op>
@@ -84,15 +83,16 @@ __global__ void tensorOperationKernel(const T* a, const T* b, T* res, int num_el
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < num_elems) {
         if (IsMulOperation<Op>::value) {
-            AtomicMul(&res[idx], op(a[idx], b[idx]));
-        } else if (IsAddOrSubOperation<Op>::value) {
-            atomicAdd(reinterpret_cast<int32_t*>(&res[idx]), static_cast<int32_t>(op(a[idx], b[idx])));
+            res[idx] = a[idx] * b[idx];
+        } else if (IsAddOperation<Op>::value) {
+            res[idx] = a[idx] + b[idx];
+        } else if (IsSubOperation<Op>::value) {
+            res[idx] = a[idx] - b[idx];
         } else {
             res[idx] = op(a[idx], b[idx]);
         }
     }
 }
-
 
 template <typename T, typename Op>
 void tensorOperationCuda(const T* h_a, const T* h_b, T* h_result, int num_elems, Op op, int block_size) {
