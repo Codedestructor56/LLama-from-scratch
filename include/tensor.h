@@ -213,6 +213,7 @@ void matmul_cuda(const T* A, const T* B, T* C, int m, int n, int p);
 template<DType dtype>
 extern Tensor<dtype> matmul(const Tensor<dtype>& tens1, const Tensor<dtype>& tens2);
 
+void atomicMulTensor(Tensor<FLOAT32>& tensor, const Tensor<FLOAT32>& values);
 
 template<DType dtype>
 extern Tensor<dtype> hstack(const std::vector<Tensor<dtype>>& tensors);

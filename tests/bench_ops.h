@@ -37,9 +37,9 @@ void benchmarkTensorOperations(int num_elems) {
     std::cout << "CPU time: " << cpu_duration.count() << " seconds" << std::endl;
     
     
-    //std::cout<<"CPU res: "<<cpu_result_add<<std::endl;
-    //std::cout<<"CPU res: "<<cpu_result_sub<<std::endl;
-    //std::cout<<"CPU res: "<<cpu_result_mul<<std::endl;
+    std::cout<<"CPU res: "<<cpu_result_add<<std::endl;
+    std::cout<<"CPU res: "<<cpu_result_sub<<std::endl;
+    std::cout<<"CPU res: "<<cpu_result_mul<<std::endl;
     // Test CUDA performance
     tensor1.change_device(CUDA);
     tensor2.change_device(CUDA);
@@ -51,9 +51,9 @@ void benchmarkTensorOperations(int num_elems) {
     auto end_cuda = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> cuda_duration = end_cuda - start_cuda;
     
-    //std::cout<<"CUDA res: "<<cuda_result_add<<std::endl;
-    //std::cout<<"CUDA res: "<<cuda_result_sub<<std::endl;
-    //std::cout<<"CUDA res: "<<cuda_result_mul<<std::endl;
+    std::cout<<"CUDA res: "<<cuda_result_add<<std::endl;
+    std::cout<<"CUDA res: "<<cuda_result_sub<<std::endl;
+    std::cout<<"CUDA res: "<<cuda_result_mul<<std::endl;
 
     std::cout << "CUDA time: " << cuda_duration.count() << " seconds" << std::endl;
 
