@@ -42,31 +42,33 @@ __global__ void atomicMulKernel(float* data, float* values, int size) {
     }
 }
 
-__host__ void atomicMulTensor(Tensor<FLOAT32>& tensor, const Tensor<FLOAT32>& values) {
+
+
+void atomicMulTensor(Tensor<FLOAT32>& tensor, const Tensor<FLOAT32>& values) {
     if (tensor.shape != values.shape) {
         throw std::runtime_error("Shapes of the tensors do not match!");
     }
 
     int numElements = std::accumulate(tensor.shape.begin(), tensor.shape.end(), 1, std::multiplies<int>());
 
-    float* tensorData = tensor.data();
-    float* valuesData = values.data();
-    
-    std::cout<<"Within the kernel: "<<tensor<<std::endl;
-    std::cout<<"Within the kernel, value: "<<values<<std::endl;
-    int blockSize = 64;
-    int numBlocks = (numElements + blockSize - 1) / blockSize;
+    float* d_tensorData;
+    float* d_valuesData;
+    cudaMalloc(&d_tensorData, numElements * sizeof(float));
+    cudaMalloc(&d_valuesData, numElements * sizeof(float));
 
-    atomicMulKernel<<<numBlocks, blockSize>>>(tensorData, valuesData, numElements);
+    cudaMemcpy(d_tensorData, tensor.data(), numElements * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_valuesData, values.data(), numElements * sizeof(float), cudaMemcpyHostToDevice);
     
-    std::cout<<"result: "<<std::endl;
-    for(int i = 0; i<numElements; i++){
-      std::cout<<tensorData[i]<<std::endl;
-    }
+    int blockSize = 256;
+    int numBlocks = (numElements + blockSize - 1) / blockSize;
+    atomicMulKernel<<<numBlocks, blockSize>>>(d_tensorData, d_valuesData, numElements);
+    cudaMemcpy(tensor.data(), d_tensorData, numElements * sizeof(float), cudaMemcpyDeviceToHost);
+    
+    cudaFree(d_tensorData);
+    cudaFree(d_valuesData);
+
     cudaDeviceSynchronize();
 }
-
-
 
 template <typename T>
 __device__ void AtomicMul(T* address, T val) {
@@ -91,23 +93,30 @@ __global__ void tensorOperationKernel(const T* a, const T* b, T* res, int num_el
     }
 }
 
+
 template <typename T, typename Op>
-void tensorOperationCuda(const T* a, const T* b, T* result, int num_elems, Op op, int block_size) {
+void tensorOperationCuda(const T* h_a, const T* h_b, T* h_result, int num_elems, Op op, int block_size) {
     int grid_size = (num_elems + block_size - 1) / block_size;
-    tensorOperationKernel<<<grid_size, block_size>>>(a, b, result, num_elems, op);
+
+    T* d_a;
+    T* d_b;
+    T* d_result;
+
+    cudaMalloc(&d_a, num_elems * sizeof(T));
+    cudaMalloc(&d_b, num_elems * sizeof(T));
+    cudaMalloc(&d_result, num_elems * sizeof(T));
+
+    cudaMemcpy(d_a, h_a, num_elems * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b, h_b, num_elems * sizeof(T), cudaMemcpyHostToDevice);
+
+    tensorOperationKernel<<<grid_size, block_size>>>(d_a, d_b, d_result, num_elems, op);
     cudaDeviceSynchronize(); 
 
-    // Print results
-    T* host_result = new T[num_elems];
-    cudaMemcpy(host_result, result, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_result, d_result, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
 
-    std::cout << "Result: ";
-    for (int i = 0; i < num_elems; ++i) {
-        std::cout << host_result[i] << " ";
-    }
-    std::cout << std::endl;
-
-    delete[] host_result;
+    cudaFree(d_a);
+    cudaFree(d_b);
+    cudaFree(d_result);
 }
 
 __global__ void matmul_kernel(const float* A, const float* B, float* C, int m, int n, int p) {
@@ -119,8 +128,6 @@ __global__ void matmul_kernel(const float* A, const float* B, float* C, int m, i
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
     float sum = 0;
-
-    printf("Thread [%d, %d]: Initial sum = %f\n", row, col, sum);
 
     for (int tile = 0; tile < (n + blockDim.x - 1) / blockDim.x; ++tile) {
         if (row < m && tile * blockDim.x + threadIdx.x < n) {
@@ -149,52 +156,35 @@ __global__ void matmul_kernel(const float* A, const float* B, float* C, int m, i
     }
 }
 
+
 template <typename T>
-void matmul_cuda(const T* A, const T* B, T* C, int m, int n, int p) {
-    // Print inputs
-    std::cout << "Input A (Matrix A):" << std::endl;
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < n; ++j) {
-            std::cout << A[i * n + j] << " ";
-        }
-        std::cout << std::endl;
-    }
+void matmul_cuda(const T* h_A, const T* h_B, T* h_C, int m, int n, int p) {
+    T* d_A;
+    T* d_B;
+    T* d_C;
 
-    std::cout << "Input B (Matrix B):" << std::endl;
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < p; ++j) {
-            std::cout << B[i * p + j] << " ";
-        }
-        std::cout << std::endl;
-    }
+    cudaMalloc(&d_A, m * n * sizeof(T));
+    cudaMalloc(&d_B, n * p * sizeof(T));
+    cudaMalloc(&d_C, m * p * sizeof(T));
 
-    std::cout << "Matrix Dimensions:" << std::endl;
-    std::cout << "m: " << m << ", n: " << n << ", p: " << p << std::endl;
+    cudaMemcpy(d_A, h_A, m * n * sizeof(T), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, h_B, n * p * sizeof(T), cudaMemcpyHostToDevice);
 
     dim3 blockDim(16, 16); 
     dim3 gridDim((p + blockDim.x - 1) / blockDim.x, (m + blockDim.y - 1) / blockDim.y); 
     size_t sharedMemSize = 2 * blockDim.x * blockDim.y * sizeof(T);
 
-    matmul_kernel<<<gridDim, blockDim, sharedMemSize>>>(reinterpret_cast<const float*>(A), 
-                                                       reinterpret_cast<const float*>(B),
-                                                       reinterpret_cast<float*>(C), m, n, p);
+    matmul_kernel<<<gridDim, blockDim, sharedMemSize>>>(reinterpret_cast<const float*>(d_A), 
+                                                       reinterpret_cast<const float*>(d_B),
+                                                       reinterpret_cast<float*>(d_C), m, n, p);
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        std::cerr << "CUDA Error: " << cudaGetErrorString(err) << std::endl;
-    }
     cudaDeviceSynchronize();
+    cudaMemcpy(h_C, d_C, m * p * sizeof(T), cudaMemcpyDeviceToHost);
 
-    // Print output
-    std::cout << "Output C (Resulting Matrix):" << std::endl;
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < p; ++j) {
-            std::cout << C[i * p + j] << " ";
-        }
-        std::cout << std::endl;
-    }
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
 }
-
 
 template void matmul_cuda<float>(const float*, const float*, float*, int, int, int);
 template void matmul_cuda<int32_t>(const int32_t*, const int32_t*, int32_t*, int, int, int);

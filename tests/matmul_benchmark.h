@@ -4,8 +4,8 @@
 
 void benchmark_matmul() {
     // Define the shape of the matrices
-    std::vector<int> shape1 = {6, 6};
-    std::vector<int> shape2 = {6, 6};
+    std::vector<int> shape1 = {7, 7, 7};
+    std::vector<int> shape2 = {7, 7, 7};
 
     // Initialize the matrices with random values
     Tensor<FLOAT32> tensor1 = Tensor<FLOAT32>::rand(shape1);
@@ -41,4 +41,6 @@ void benchmark_matmul() {
 
     std::cout << "CPU MatMul Time: " << duration_cpu << " ms" << std::endl;
     std::cout << "CUDA MatMul Time: " << duration_cuda << " ms" << std::endl;
+
+    std::cout<<"Tests passed!"<<std::endl;
 }
