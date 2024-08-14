@@ -7,7 +7,9 @@
 #include <memory>
 #include <thread>
 #include <mutex>
+#include <fstream>
 #include <condition_variable>
+#include <sentencepiece_processor.h>
 
 class Dataloader {
 public:
@@ -28,7 +30,7 @@ public:
     Tensor<UINT32> text_to_tensor_ids(const std::string& text, const std::vector<int>& shape);
 
 private:
-     void load_data();
+    void load_data();
 
     Tensor<FLOAT32> vector_to_tensor_float32(const std::vector<float>& vec, const std::vector<int>& shape);
     Tensor<FLOAT16> vector_to_tensor_float16(const std::vector<uint16_t>& vec, const std::vector<int>& shape);
@@ -48,6 +50,7 @@ private:
     bool stop_requested_;
     std::vector<std::thread> worker_threads_;
     std::mutex data_mutex_;
+    std::vector<std::string> lines;
     TensorVariant current_batch_;
 };
 

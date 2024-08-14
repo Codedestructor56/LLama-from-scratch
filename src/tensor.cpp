@@ -410,11 +410,11 @@ Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
     if (tensors.empty()) {
         throw std::runtime_error("No tensors provided for hstack.");
     }
-
-    int rows = tensors[0].shape[0];
+    int check_rows = tensors[0].shape[0];
+    int rows = tensors[0].shape[0]; 
     int total_cols = 0;
     for (const auto& tensor : tensors) {
-        if (tensor.shape.size() != 2 || tensor.shape[0] != rows) {
+        if ((tensor.shape.size() != 2) || (check_rows != tensor.shape[0])) {
             throw std::runtime_error("Incompatible tensor dimensions for hstack.");
         }
         total_cols += tensor.shape[1];
@@ -431,9 +431,11 @@ Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
         col_offset += tensor.shape[1];
     }
     result.type = dtype;
+
     std::vector<TensorVariant> children;
-    children.push_back(std::make_shared<Tensor<dtype>>(tensors[0]));
-    children.push_back(std::make_shared<Tensor<dtype>>(tensors[1]));
+    for (const auto& tensor : tensors) {
+        children.push_back(std::make_shared<Tensor<dtype>>(tensor));
+    }
     result.set_children(children);
     return result;
 }
@@ -454,10 +456,10 @@ Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
         throw std::runtime_error("No tensors provided for vstack.");
     }
 
-    int cols = tensors[0].shape[1];
+    int cols = tensors[0].shape.back();
     int total_rows = 0;
     for (const auto& tensor : tensors) {
-        if (tensor.shape.size() != 2 || tensor.shape[1] != cols) {
+        if (tensor.shape.size() != 2 || tensor.shape.back() != cols) {
             throw std::runtime_error("Incompatible tensor dimensions for vstack.");
         }
         total_rows += tensor.shape[0];
@@ -473,10 +475,12 @@ Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
     }
     
     result.type = dtype;
+    
     std::vector<TensorVariant> children;
-    children.push_back(std::make_shared<Tensor<dtype>>(tensors[0]));
-    children.push_back(std::make_shared<Tensor<dtype>>(tensors[1]));
-    result.set_children(children);
+    for (const auto& tensor : tensors) {
+        children.push_back(std::make_shared<Tensor<dtype>>(tensor));
+    }
+    result.set_children(children);  
     return result;
 }
 

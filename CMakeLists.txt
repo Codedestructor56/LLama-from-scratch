@@ -15,6 +15,7 @@ include_directories(${CMAKE_SOURCE_DIR}/external/sentencepiece/src)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CUDA_INCLUDE_DIRS})
 
+
 # Collect all C++ source files in the src directory except main.cpp
 file(GLOB CPP_SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 list(REMOVE_ITEM CPP_SOURCES ${CMAKE_SOURCE_DIR}/src/main.cpp)
@@ -31,6 +32,7 @@ target_link_libraries(llamascratch sentencepiece ${CUDA_cudart_LIBRARY})
 
 # Set the --expt-relaxed-constexpr flag globally for all CUDA files
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
 
 # Define the test executable
 add_executable(test_entry_point ${CMAKE_SOURCE_DIR}/tests/entry_point.cpp ${CPP_SOURCES} ${CUDA_SOURCES})

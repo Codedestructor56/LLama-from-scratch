@@ -10,6 +10,7 @@
 #include "bench_ops.h"
 #include "matmul_benchmark.h"
 #include "at_mul_test.h"
+//#include "dataloading.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]) {
             break;
         case 9:
             std::cout << "Running Benchmark test for simple ops(CUDA vs CPU)..." << std::endl;
-            benchmarkTensorOperations(10);
+            benchmarkTensorOperations(10000000);
             break;
         case 10:
             std::cout << "Running Benchmark test for matmul(CUDA vs CPU)..." << std::endl;
@@ -63,8 +64,10 @@ int main(int argc, char* argv[]) {
             std::cout << "Running Tests for Atomic mult(CUDA)..." << std::endl;
             testAtomicMulTensor();
             break;
-
-        
+        //case 12:
+            //std::cout << "Testing the text-to-ids function..." << std::endl;
+            //test_dataloader();
+            //break;
 
         default:
             std::cout << "Invalid test number." << std::endl;

@@ -117,7 +117,7 @@ public:
     std::shared_ptr<const Tensor<dtype>> shared_from_this() const{
         return std::enable_shared_from_this<Tensor<dtype>>::shared_from_this();
     }
-
+  
     static Tensor<dtype> ones(const std::vector<int>& shape);
     static Tensor<dtype> zeros(const std::vector<int>& shape);
     static Tensor<dtype> rand(const std::vector<int>& shape);
@@ -175,6 +175,13 @@ public:
     Tensor<dtype> operator+(const TensorVariant& other) const;
     Tensor<dtype> operator-(const TensorVariant& other) const;
     Tensor<dtype> operator*(const TensorVariant& other) const;
+    
+       
+    int size() const {
+      int size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+      return size;
+    }
+
 
     T* data() const { return data_; } 
     void data_set(const T* data) { data_ = const_cast<T*>(data);}
