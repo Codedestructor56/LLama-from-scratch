@@ -414,7 +414,7 @@ Tensor<dtype> hstack_impl(const std::vector<Tensor<dtype>>& tensors) {
     int rows = tensors[0].shape[0]; 
     int total_cols = 0;
     for (const auto& tensor : tensors) {
-        if ((tensor.shape.size() != 2) || (check_rows != tensor.shape[0])) {
+        if (check_rows != tensor.shape[0]) {
             throw std::runtime_error("Incompatible tensor dimensions for hstack.");
         }
         total_cols += tensor.shape[1];
@@ -459,7 +459,7 @@ Tensor<dtype> vstack_impl(const std::vector<Tensor<dtype>>& tensors) {
     int cols = tensors[0].shape.back();
     int total_rows = 0;
     for (const auto& tensor : tensors) {
-        if (tensor.shape.size() != 2 || tensor.shape.back() != cols) {
+        if (tensor.shape.back() != cols) {
             throw std::runtime_error("Incompatible tensor dimensions for vstack.");
         }
         total_rows += tensor.shape[0];

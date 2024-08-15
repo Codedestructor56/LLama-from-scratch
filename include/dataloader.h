@@ -9,6 +9,7 @@
 #include <mutex>
 #include <variant>
 #include <fstream>
+#include <sstream>
 #include <condition_variable>
 #include <sentencepiece_processor.h>
 #include <type_traits>
@@ -32,12 +33,14 @@ public:
     Tensor<UINT32> text_to_tensor_ids(const std::string& text, const std::vector<int>& shape);
 
 private:
-    void load_data(); 
+    void load_data();
+    void process_file_segment(size_t start, size_t end);
 
     void convert_to_tensor();
     void process_data();
     void distribute_tasks();
     void gather_results();
+ 
 
     sentencepiece::SentencePieceProcessor tokenizer_;
     std::string data_path_;
@@ -45,8 +48,10 @@ private:
     bool stop_requested_;
     std::vector<std::thread> worker_threads_;
     std::mutex data_mutex_;
-    std::vector<std::string> lines;
+    std::condition_variable cv_; 
+    std::vector<std::string> words;
     TensorVariant current_batch_;
+    size_t current_word_index_; 
 };
 
 #endif

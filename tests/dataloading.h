@@ -8,14 +8,15 @@
 void test_dataloader() {
   try {
         // Create a Dataloader instance
-        Dataloader dataloader("wikitext-2-train", 32);
+        Dataloader dataloader("quant_mech", 32);
 
         while (true) {
             // Fetch the next batch as UINT32
             Tensor<UINT32> uint32_batch = dataloader.get_next_batch_uint32();
 
+            //std::cout<< uint32_batch <<std::endl;
             // Check if the batch is empty (all batches are processed)
-            if (uint32_batch.size() == 0) {
+            if (uint32_batch.shape.size()==0) {
                 break;
             }
 

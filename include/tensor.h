@@ -53,6 +53,7 @@ template <DType dtype>
 class Tensor;
 
 using TensorVariant = std::variant<
+        std::monostate,
         std::shared_ptr<Tensor<FLOAT32>>, 
         std::shared_ptr<Tensor<FLOAT16>>, 
         std::shared_ptr<Tensor<INT32>>, 
