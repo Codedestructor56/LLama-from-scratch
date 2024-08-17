@@ -1,3 +1,6 @@
 [submodule "external/sentencepiece"]
 	path = external/sentencepiece
 	url = https://github.com/google/sentencepiece.git
+[submodule "external/glove"]
+	path = external/glove
+	url = https://github.com/stanfordnlp/glove

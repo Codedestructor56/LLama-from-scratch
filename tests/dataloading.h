@@ -6,7 +6,7 @@ void test_dataloader() {
     try {
         // Create a Dataloader instance
         Dataloader dataloader("wikitext-2-train", 64);
-
+        int num_batch = 0;
         // Start the asynchronous data loading
         dataloader.start_loading();
 
@@ -25,11 +25,13 @@ void test_dataloader() {
                 std::cout << elem << " ";
             }
             std::cout << std::endl;
+            num_batch++;
  
         }
 
         // Stop the asynchronous data loading
         dataloader.stop_loading();
+        std::cout<<num_batch<<std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Test failed with exception: " << e.what() << std::endl;
