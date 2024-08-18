@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
             break;
         case 9:
             std::cout << "Running Benchmark test for simple ops(CUDA vs CPU)..." << std::endl;
-            benchmarkTensorOperations(10000000);
+            benchmarkTensorOperations(100000000);
             break;
         case 10:
             std::cout << "Running Benchmark test for matmul(CUDA vs CPU)..." << std::endl;

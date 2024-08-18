@@ -53,7 +53,7 @@ template <DType dtype>
 class Tensor;
 
 using TensorVariant = std::variant<
-        std::monostate,
+        
         std::shared_ptr<Tensor<FLOAT32>>, 
         std::shared_ptr<Tensor<FLOAT16>>, 
         std::shared_ptr<Tensor<INT32>>, 
@@ -82,7 +82,7 @@ class Tensor : public std::enable_shared_from_this<Tensor<dtype>> {
 public:
     Tensor() : data_(nullptr), type(dtype), tens_device(CPU) {}
 
-    Tensor(const std::vector<int>& shape) : shape(shape), tens_device(CPU) {
+    Tensor(const std::vector<int>& shape) : type(dtype), shape(shape), tens_device(CPU) {
         int num_elems = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
         data_ = static_cast<T*>(allocate_memory(dtype, num_elems * sizeof(T)));
         for (int i = 0; i < num_elems; ++i) {
