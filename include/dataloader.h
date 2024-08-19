@@ -15,6 +15,7 @@
 #include <sstream>
 #include <condition_variable>
 #include <queue>
+#include <iterator>
 #include <sentencepiece_processor.h>
 #include <type_traits>
 
@@ -54,3 +55,6 @@ private:
 };
 
 #endif
+
+
+
