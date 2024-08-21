@@ -1,25 +1,24 @@
 #ifndef EMBEDDINGS_H
 #define EMBEDDINGS_H
 
-#include "tensor.h"  
-#include <unordered_map>
-#include <string>
+#include "tensor.h"
+#include <memory>
 #include <vector>
 
 template<DType dtype>
 class Embeddings {
-public:
+public: 
     Embeddings(size_t vocab_size, size_t embedding_dim);
+    Tensor<dtype> forward(const Tensor<UINT32>& input);
 
-    Tensor<dtype> initialize_from_tokens(const Tensor<std::string>& tokens);
+    Tensor<dtype> backward(const Tensor<dtype>& grad_output);
+    void update(const Tensor<dtype>& grad, float learning_rate);
 
-    void set_embedding(const std::string& token, const std::vector<T>& embedding);
-
-    std::vector<T> get_embedding(const std::string& token) const;
+    Tensor<dtype> get_embedding_matrix() const;
 
 private:
+    size_t vocab_size_;
     size_t embedding_dim_;
-    std::unordered_map<std::string, std::vector<T>> embedding_map_;
-};
+    Tensor<dtype> embedding_matrix_;
 
-#endif
+#endif 
