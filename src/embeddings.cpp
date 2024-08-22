@@ -9,8 +9,8 @@ Embeddings<dtype>::Embeddings(size_t vocab_size, size_t embedding_dim)
 
 //since this module will only interact with the dataloader, I am assuming that only
 //tensors of shape (batch_size, 1) will be passed to this module
-template<DType dtype>
-Tensor<dtype> Embeddings<dtype>::forward(const Tensor<UINT32>& input) {
+
+Embeddings<UINT32>::forward(const Tensor<UINT32>& input) {
     std::vector<int> output_shape = {static_cast<int>(input.shape[0]), static_cast<int>(embedding_dim_)};
     Tensor<dtype> output(output_shape);
     
@@ -22,6 +22,8 @@ Tensor<dtype> Embeddings<dtype>::forward(const Tensor<UINT32>& input) {
     }
     return output;
 }
+
+
 template class Embeddings<FLOAT16>;
 template class Embeddings<FLOAT32>;
 template class Embeddings<INT8>;

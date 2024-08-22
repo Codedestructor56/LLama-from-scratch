@@ -11,6 +11,7 @@
 #include "matmul_benchmark.h"
 #include "at_mul_test.h"
 #include "dataloading.h"
+#include "embed_tests.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -67,6 +68,10 @@ int main(int argc, char* argv[]) {
         case 12:
             std::cout << "Testing the text-to-ids function..." << std::endl;
             test_dataloader();
+            break;
+        case 13:
+            std::cout << "Testing the text-to-ids function..." << std::endl;
+            test_embeddings();
             break;
 
         default:

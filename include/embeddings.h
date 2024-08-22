@@ -14,11 +14,15 @@ public:
     Tensor<dtype> backward(const Tensor<dtype>& grad_output);
     void update(const Tensor<dtype>& grad, float learning_rate);
 
-    Tensor<dtype> get_embedding_matrix() const;
+    Tensor<dtype> get_embedding_matrix() const  {
+      return embedding_matrix_;
+    }
 
 private:
     size_t vocab_size_;
     size_t embedding_dim_;
     Tensor<dtype> embedding_matrix_;
+};
+
 
 #endif 
