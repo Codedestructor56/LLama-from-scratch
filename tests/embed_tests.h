@@ -11,26 +11,26 @@ void test_embeddings() {
 
     // Instantiate Embeddings object
     Embeddings<FLOAT32> embeddings(vocab_size, embedding_dim);
-
+ 
     // Test Forward Method: Single Token ID
     std::vector<int> input_shape = {1, 1}; // (batch_size = 1, sequence_length = 1)
     Tensor<UINT32> input(input_shape);
     input.set({0, 0}, 3); // Token ID 3
-
+    
     Tensor<FLOAT32> output = embeddings.forward(input);
     assert(output.shape[0] == 1);          // Batch size
     assert(output.shape[1] == embedding_dim); // Embedding dimension
-
+   
     // Test Forward Method: Multiple Token IDs
     input_shape = {2, 1}; // (batch_size = 2, sequence_length = 1)
     Tensor<UINT32> input_multiple(input_shape);
     input_multiple.set({0, 0}, 2); // Token ID 2
     input_multiple.set({1, 0}, 7); // Token ID 7
-
+    
     output = embeddings.forward(input_multiple);
     assert(output.shape[0] == 2);         // Batch size
     assert(output.shape[1] == embedding_dim); // Embedding dimension
-
+    
     // Test Forward Method: Out of Range Token ID
     Tensor<UINT32> input_out_of_range({1, 1});
     input_out_of_range.set({0, 0}, 12); // Token ID out of range

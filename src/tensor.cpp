@@ -63,9 +63,7 @@ void Tensor<dtype>::allocate_and_initialize(const std::vector<int>& shape, bool 
     T* arr = static_cast<T*>(allocate_memory(dtype, num_elements));
     if (zero_initialize) {
         std::memset(arr, 0, num_elements * sizeof(T));
-        for (int i = 0; i < std::min(num_elements, 10); ++i) {
-            std::cout << "Zero init arr[" << i << "] = " << +arr[i] << std::endl;
-        }
+ 
     } else {
         if (is_rand) {
             if (dtype != FLOAT32) {

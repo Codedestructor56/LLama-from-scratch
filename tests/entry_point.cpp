@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
             test_dataloader();
             break;
         case 13:
-            std::cout << "Testing the text-to-ids function..." << std::endl;
+            std::cout << "Testing the embeddings function..." << std::endl;
             test_embeddings();
             break;
 
