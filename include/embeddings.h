@@ -10,6 +10,8 @@ template<DType dtype>
 class Embeddings {
 public: 
     Embeddings(size_t vocab_size, size_t embedding_dim);
+    Embeddings(size_t vocab_size, size_t embedding_dim, Device device);
+
     Tensor<dtype> forward(const Tensor<UINT32>& input);
 
     Tensor<dtype> backward(const Tensor<dtype>& grad_output);
@@ -23,18 +25,25 @@ private:
     size_t vocab_size_;
     size_t embedding_dim_;
     Tensor<dtype> embedding_matrix_;
+    Device device;
 };
 
 template<DType dtype>
 Embeddings<dtype>::Embeddings(size_t vocab_size, size_t embedding_dim)
-    : vocab_size_(vocab_size), embedding_dim_(embedding_dim), 
+    : vocab_size_(vocab_size), embedding_dim_(embedding_dim), device(CPU), 
+      embedding_matrix_(Tensor<dtype>::rand({static_cast<int>(vocab_size), static_cast<int>(embedding_dim)})) {}
+
+
+template<DType dtype>
+Embeddings<dtype>::Embeddings(size_t vocab_size, size_t embedding_dim, Device device)
+    : vocab_size_(vocab_size), embedding_dim_(embedding_dim), device(device), 
       embedding_matrix_(Tensor<dtype>::rand({static_cast<int>(vocab_size), static_cast<int>(embedding_dim)})) {}
 
 template<DType dtype>
 Tensor<dtype> Embeddings<dtype>::forward(const Tensor<UINT32>& input) {
     std::vector<int> output_shape = {static_cast<int>(input.shape[0]), static_cast<int>(embedding_dim_)};
     Tensor<dtype> output = Tensor<dtype>::zeros(output_shape);
-    
+    output.change_device(device); 
     for (size_t i = 0; i < input.shape[0]; ++i) {
         int token_id = static_cast<int>(input.get({static_cast<int>(i), 0}));
         if(token_id >= vocab_size_){
