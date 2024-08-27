@@ -24,4 +24,11 @@ template<DType dtype>
 RMSNorm<dtype>::RMSNorm(std::unique_ptr<Dataloader> dataloader, std::unique_ptr<Embeddings<dtype>> embeddings, float epsilon, Device device)
 : dataloader_(std::move(dataloader)), embeddings_(std::move(embeddings)), epsilon_(epsilon), device_(device) {}
 
+
+template class RMSNorm<FLOAT32>;
+template class RMSNorm<FLOAT16>;
+template class RMSNorm<INT8>;
+template class RMSNorm<INT32>;
+template class RMSNorm<UINT8>;
+template class RMSNorm<UINT32>;
 #endif

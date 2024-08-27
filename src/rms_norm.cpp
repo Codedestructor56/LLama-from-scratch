@@ -30,9 +30,4 @@ Tensor<dtype> RMSNorm<dtype>::forward(const Tensor<dtype>& input) {
     return normed_tensor;
 }
 
-template class RMSNorm<FLOAT32>;
-template class RMSNorm<FLOAT16>;
-template class RMSNorm<INT8>;
-template class RMSNorm<INT32>;
-template class RMSNorm<UINT8>;
-template class RMSNorm<UINT32>;
+

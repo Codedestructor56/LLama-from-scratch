@@ -12,6 +12,7 @@
 #include "at_mul_test.h"
 #include "dataloading.h"
 #include "embed_tests.h"
+#include "rms_norm_test.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -72,6 +73,10 @@ int main(int argc, char* argv[]) {
         case 13:
             std::cout << "Testing the embeddings function..." << std::endl;
             test_embeddings();
+            break;
+        case 14:
+            std::cout << "Testing the rms norm function..." << std::endl;
+            test_rmsnorm_forward();
             break;
 
         default:
