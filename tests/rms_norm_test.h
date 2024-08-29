@@ -7,7 +7,7 @@ void test_rmsnorm_forward() {
     std::vector<int> shape = {2, 5}; // Example shape
 
     // Create a dataloader instance with a dummy data path and batch size
-    std::unique_ptr<Dataloader> dataloader = std::make_unique<Dataloader>("path/to/data.txt", 2);
+    std::unique_ptr<Dataloader> dataloader = std::make_unique<Dataloader>("quant_mech", 2);
 
     // Start loading data in the background
     dataloader->start_loading();
