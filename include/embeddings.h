@@ -47,6 +47,8 @@ Tensor<dtype> Embeddings<dtype>::forward(const Tensor<UINT32>& input) {
     for (size_t i = 0; i < input.shape[0]; ++i) {
         int token_id = static_cast<int>(input.get({static_cast<int>(i), 0}));
         if(token_id >= vocab_size_){
+          std::cout<<"Token ID: "<<token_id<<std::endl;
+          std::cout<<"Vocab size: "<<vocab_size_<<std::endl;
           throw std::out_of_range("Token Ids should not exceed vocab size");
         }
         for (size_t j = 0; j < embedding_dim_; ++j) {

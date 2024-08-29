@@ -6,17 +6,17 @@ void test_rmsnorm_forward() {
     // Define the shape of the input data and create a dataloader and embeddings
     std::vector<int> shape = {2, 5}; // Example shape
 
-    // Create a dataloader instance with a dummy data path and batch size
-    std::unique_ptr<Dataloader> dataloader = std::make_unique<Dataloader>("quant_mech", 2);
+    // Create a shared_ptr to a dataloader instance with a dummy data path and batch size
+    std::shared_ptr<Dataloader> dataloader = std::make_shared<Dataloader>("quant_mech", 2);
 
     // Start loading data in the background
     dataloader->start_loading();
 
-    // Create an embeddings instance with vocab size and embedding dimension
-    std::unique_ptr<Embeddings<FLOAT32>> embeddings = std::make_unique<Embeddings<FLOAT32>>(100, 5); // Example dimensions
+    // Create a shared_ptr to an embeddings instance with vocab size and embedding dimension
+    std::shared_ptr<Embeddings<FLOAT32>> embeddings = std::make_shared<Embeddings<FLOAT32>>(500, 5); // Example dimensions
 
     // Instantiate the RMSNorm with epsilon
-    RMSNorm<FLOAT32> rmsnorm(std::move(dataloader), std::move(embeddings), 1e-5);
+    RMSNorm<FLOAT32> rmsnorm(dataloader, embeddings, 1e-5);
 
     // Create an input tensor
     Tensor<FLOAT32> input = Tensor<FLOAT32>::rand(shape);
