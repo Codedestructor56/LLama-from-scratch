@@ -3,31 +3,32 @@
 #include "embeddings.h"
 
 void test_rmsnorm_forward() {
-    // Define the shape of the input data and create a dataloader and embeddings
+    // Define the shape of the input data
     std::vector<int> shape = {2, 5}; // Example shape
 
-    // Create a shared_ptr to a dataloader instance with a dummy data path and batch size
-    std::shared_ptr<Dataloader> dataloader = std::make_shared<Dataloader>("quant_mech", 2);
+    // Create a dataloader instance with a dummy data path and batch size
+    Dataloader dataloader("quant_mech", 2);
 
     // Start loading data in the background
-    dataloader->start_loading();
+    dataloader.start_loading();
 
-    // Create a shared_ptr to an embeddings instance with vocab size and embedding dimension
-    std::shared_ptr<Embeddings<FLOAT32>> embeddings = std::make_shared<Embeddings<FLOAT32>>(500, 5); // Example dimensions
+    // Create an embeddings instance with vocab size and embedding dimension
+    Embeddings<FLOAT32> embeddings(500, 5); // Example dimensions
+
+    // Retrieve the next batch and forward through embeddings
+    Tensor<UINT32> batch_data = dataloader.get_next_batch_uint32();
+    Tensor<FLOAT32> embedded_data = embeddings.forward(batch_data);
 
     // Instantiate the RMSNorm with epsilon
-    RMSNorm<FLOAT32> rmsnorm(dataloader, embeddings, 1e-5);
+    RMSNorm<FLOAT32> rmsnorm(1e-5);
 
-    // Create an input tensor
-    Tensor<FLOAT32> input = Tensor<FLOAT32>::rand(shape);
-
-    // Perform the forward operation
-    Tensor<FLOAT32> output = rmsnorm.forward(input);
+    // Perform the forward operation using the embedded data
+    Tensor<FLOAT32> output = rmsnorm.forward(embedded_data);
 
     // Print the input and output tensors for visual inspection
     std::cout << "Input Tensor:\n";
-    for (int i = 0; i < input.size(); ++i) {
-        std::cout << input.data()[i] << " ";
+    for (int i = 0; i < embedded_data.size(); ++i) {
+        std::cout << embedded_data.data()[i] << " ";
     }
     std::cout << "\nOutput Tensor:\n";
     for (int i = 0; i < output.size(); ++i) {
@@ -36,7 +37,6 @@ void test_rmsnorm_forward() {
     std::cout << std::endl;
 
     // Optional: Add assertions to verify correctness
-    // Example: Verify that the output tensor is normalized
     float sum_of_squares = 0.0f;
     for (int i = 0; i < output.size(); ++i) {
         sum_of_squares += output.data()[i] * output.data()[i];
@@ -50,5 +50,5 @@ void test_rmsnorm_forward() {
     }
 
     // Stop the dataloader after the test
-    dataloader->stop_loading();
+    dataloader.stop_loading();
 }

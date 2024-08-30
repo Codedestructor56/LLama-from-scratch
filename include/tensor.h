@@ -153,7 +153,7 @@ public:
         return children.size();
     } 
     
-    const std::vector<int> get_shape(){
+    const std::vector<int> get_shape() const {
       return shape;
     }
     const std::vector<TensorVariant>& get_children() const {
