@@ -25,4 +25,9 @@ private:
     Tensor<dtype> context_;
 };
 
+template<Dtype dtype>
+FlashAttention::FlashAttention(int head_dim_, int num_heads_, Device device)
+  :head_dim_(head_dim_), num_heads_(num_heads_),device(device){}
+
+
 #endif 
